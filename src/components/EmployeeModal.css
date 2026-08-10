@@ -1,0 +1,216 @@
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+  background: rgba(15, 15, 16, 0.45);
+  backdrop-filter: blur(4px);
+}
+
+.employee-modal {
+  width: 100%;
+  max-width: 520px;
+  max-height: min(92vh, 720px);
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 4px);
+  box-shadow:
+    0 24px 48px rgba(0, 0, 0, 0.12),
+    0 8px 16px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+}
+
+.employee-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 24px 24px 0;
+}
+
+.employee-modal-header-text {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.employee-modal-title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--foreground);
+}
+
+.employee-modal-lead {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--foreground-secondary);
+  max-width: 38ch;
+}
+
+.employee-modal-close {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text-muted);
+  font-size: 1.25rem;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.employee-modal-close:hover:not(:disabled) {
+  background: var(--surface-muted);
+  color: var(--foreground);
+  border-color: var(--border-strong);
+}
+
+.employee-modal-close:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.employee-modal-form {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.employee-modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px 24px 8px;
+  overflow-y: auto;
+}
+
+.employee-modal-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.employee-modal-grid .field-span-2 {
+  grid-column: 1 / -1;
+}
+
+.employee-modal .field {
+  gap: 8px;
+}
+
+.employee-modal .field label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--foreground-secondary);
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.employee-modal .field-hint {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.employee-modal .field input {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  font-size: 0.9375rem;
+  color: var(--foreground);
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.employee-modal .field input::placeholder {
+  color: #aeaeb2;
+}
+
+.employee-modal .field input:focus {
+  outline: none;
+  border-color: var(--orange);
+  box-shadow: 0 0 0 3px var(--orange-soft);
+}
+
+.employee-modal .field input:disabled {
+  background: var(--surface-muted);
+  color: var(--text-muted);
+}
+
+.employee-modal-note {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--orange-soft);
+  border: 1px solid rgba(232, 136, 28, 0.2);
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--foreground-secondary);
+}
+
+.employee-modal-note strong {
+  color: var(--orange-dark);
+  font-weight: 600;
+}
+
+.employee-modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 16px 24px 24px;
+  border-top: 1px solid var(--border);
+  background: var(--surface-muted);
+}
+
+.employee-modal-footer .btn {
+  min-width: 112px;
+}
+
+.employee-modal-footer .btn-primary {
+  min-width: 140px;
+  padding: 12px 20px;
+}
+
+@media (max-width: 560px) {
+  .employee-modal-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .employee-modal-grid .field-span-2 {
+    grid-column: auto;
+  }
+
+  .employee-modal-footer {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+
+  .employee-modal-footer .btn {
+    width: 100%;
+    min-width: 0;
+  }
+}

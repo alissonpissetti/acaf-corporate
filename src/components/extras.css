@@ -1,0 +1,240 @@
+.unit-photos-field {
+  padding: 20px 22px;
+  display: grid;
+  gap: 16px;
+}
+
+.unit-photos-header .section-title {
+  margin-bottom: 6px;
+}
+
+.unit-photos-help {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+  max-width: 40rem;
+}
+
+.unit-photos-help-embedded {
+  margin: 0 0 4px;
+}
+
+.unit-photos-embedded {
+  padding: 0;
+  gap: 12px;
+}
+
+.unit-photos-grid {
+  display: grid;
+  gap: 20px;
+}
+
+@media (min-width: 720px) {
+  .unit-photos-grid {
+    grid-template-columns: 220px 1fr;
+    align-items: start;
+  }
+}
+
+.unit-photo-slot {
+  display: grid;
+  gap: 10px;
+}
+
+.unit-photo-slot.wide {
+  min-width: 0;
+}
+
+.unit-photo-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.unit-photo-preview {
+  display: grid;
+  place-items: center;
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface-muted);
+  overflow: hidden;
+}
+
+.unit-photo-preview.hero {
+  aspect-ratio: 4 / 3;
+}
+
+.unit-photo-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.unit-photo-placeholder {
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+  padding: 1rem;
+  text-align: center;
+}
+
+.unit-photo-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.unit-photos-format-hint {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.unit-photo-remove-btn {
+  color: #b42318;
+}
+
+.unit-photo-gallery {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.unit-photo-gallery-item {
+  position: relative;
+  width: 88px;
+  height: 88px;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+
+.unit-photo-gallery-item.is-cover {
+  border-color: var(--orange);
+  box-shadow: 0 0 0 1px var(--orange);
+}
+
+.unit-photo-gallery-select {
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  position: relative;
+}
+
+.unit-photo-gallery-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.unit-photo-cover-badge {
+  position: absolute;
+  left: 4px;
+  bottom: 4px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(15, 23, 42, 0.78);
+  color: #fff;
+  font-size: 0.625rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  pointer-events: none;
+}
+
+.unit-photo-gallery-remove {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 22px;
+  height: 22px;
+  border: none;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.72);
+  color: #fff;
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.unit-photo-gallery-remove:hover {
+  background: rgba(220, 38, 38, 0.9);
+}
+
+.unit-photo-gallery-add {
+  width: 88px;
+  height: 88px;
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface-muted);
+  color: var(--text-muted);
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+.unit-photo-gallery-add:hover:not(:disabled) {
+  border-color: var(--orange);
+  color: var(--orange-dark);
+}
+
+.unit-switch-label {
+  font-size: 0.6875rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-top: 8px;
+}
+
+.unit-select {
+  width: 100%;
+  margin-top: 4px;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.sidebar-error {
+  font-size: 0.75rem;
+  color: var(--error);
+  background: #fef2f2;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.reception-result {
+  padding: 16px;
+  border-radius: var(--radius-sm);
+  font-weight: 500;
+}
+
+.reception-result.ok {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.reception-result.err {
+  background: #fef2f2;
+  color: #991b1b;
+}
+
+.reception-codes {
+  font-family: ui-monospace, monospace;
+  font-size: 0.8125rem;
+  background: var(--surface-muted);
+  padding: 12px;
+  border-radius: var(--radius-sm);
+  line-height: 1.6;
+}

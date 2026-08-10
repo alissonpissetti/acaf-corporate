@@ -1,0 +1,112 @@
+.flash-viewport {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  pointer-events: none;
+  max-width: min(420px, calc(100vw - 40px));
+}
+
+.flash-message {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 12px;
+  align-items: start;
+  padding: 14px 16px;
+  border-radius: var(--radius-md, 12px);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  box-shadow: 0 12px 40px rgba(15, 23, 42, 0.14);
+  pointer-events: auto;
+  animation: flash-enter 0.28s ease-out;
+}
+
+@keyframes flash-enter {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.flash-message-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.375rem;
+  height: 1.375rem;
+  border-radius: 999px;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  line-height: 1;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.flash-message-text {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.45;
+  color: var(--foreground-secondary);
+}
+
+.flash-message-dismiss {
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 1.25rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+  width: 1.25rem;
+  height: 1.25rem;
+  flex-shrink: 0;
+}
+
+.flash-message-dismiss:hover {
+  color: var(--foreground-secondary);
+}
+
+.flash-message-success {
+  border-color: rgba(22, 163, 74, 0.25);
+}
+
+.flash-message-success .flash-message-icon {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.flash-message-error {
+  border-color: rgba(220, 38, 38, 0.25);
+}
+
+.flash-message-error .flash-message-icon {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.flash-message-info {
+  border-color: rgba(232, 136, 28, 0.25);
+}
+
+.flash-message-info .flash-message-icon {
+  background: var(--orange-soft);
+  color: var(--orange-dark);
+}
+
+@media (max-width: 640px) {
+  .flash-viewport {
+    left: 16px;
+    right: 16px;
+    bottom: 16px;
+    align-items: stretch;
+    max-width: none;
+  }
+}
