@@ -1,4 +1,14 @@
-/** Base da API NestJS (acaf-api). Em dev, vazio usa o proxy do Vite. */
-export const API_URL =
-  import.meta.env.VITE_API_URL ??
-  (import.meta.env.DEV ? '' : 'http://127.0.0.1:8787');
+/**
+ * URL base da API (sem barra final).
+ * Produção Coolify: definida em runtime via api-config.js (API_BACKEND_URL).
+ * Dev: VITE_API_URL ou proxy Vite (/api).
+ */
+function readApiUrl(): string {
+  if (typeof window !== 'undefined' && window.__ACAF_API_URL__) {
+    return String(window.__ACAF_API_URL__).replace(/\/$/, '');
+  }
+  const fromEnv = import.meta.env.VITE_API_URL ?? '';
+  return String(fromEnv).replace(/\/$/, '');
+}
+
+export const API_URL = readApiUrl();

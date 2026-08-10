@@ -7,3 +7,7 @@ interface ImportMetaEnv {
 interface ImportMeta {
   readonly env: ImportMetaEnv;
 }
+
+interface Window {
+  __ACAF_API_URL__?: string;
+}
