@@ -36,7 +36,7 @@ RUN chmod +x /docker-entrypoint.d/10-default-env.sh /docker-entrypoint.d/15-api-
 
 EXPOSE 80
 
-HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
-  CMD sh -c 'wget -q -O /dev/null "http://127.0.0.1:${PORT:-80}/" || exit 1'
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+  CMD sh -c 'wget -q -O /dev/null "http://127.0.0.1:${PORT:-80}/api/health" || exit 1'
 
 CMD ["nginx", "-g", "daemon off;"]

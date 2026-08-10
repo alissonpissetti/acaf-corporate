@@ -88,14 +88,21 @@ async function corporateFetch<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 export async function apiHealth(): Promise<boolean> {
-  const candidates = [apiUrl('/api/health')];
-  const direct = candidates[0];
-  if (!direct.startsWith('/')) {
+  const candidates: string[] = [];
+  const primary = apiUrl('/api/health');
+  candidates.push(primary);
+  if (primary.startsWith('/')) {
     candidates.push('/api/health');
   }
+
+  const devFallback = import.meta.env.VITE_API_PROXY_TARGET?.replace(/\/$/, '');
+  if (devFallback) {
+    candidates.push(`${devFallback}/api/health`);
+  }
+
   for (const url of candidates) {
     try {
-      const res = await fetch(url);
+      const res = await fetch(url, { method: 'GET', cache: 'no-store' });
       if (res.ok) return true;
     } catch {
       /* tenta próximo */
