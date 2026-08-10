@@ -24,7 +24,11 @@ function canSendInvite(emp: EmployeeDto): boolean {
 export function EmployeesPage() {
   const flash = useFlash();
   const { company } = useCorporate();
-  const enrollmentCode = company?.enrollmentCode ?? null;
+  const [enrollmentCode, setEnrollmentCode] = useState<string | null>(
+    company?.enrollmentCode ?? null,
+  );
+  const [codeLoading, setCodeLoading] = useState(company?.status === 'active');
+  const [codeError, setCodeError] = useState<string | null>(null);
   const [employees, setEmployees] = useState<EmployeeDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -51,6 +55,33 @@ export function EmployeesPage() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  useEffect(() => {
+    if (company?.enrollmentCode) {
+      setEnrollmentCode(company.enrollmentCode);
+      setCodeLoading(false);
+      setCodeError(null);
+      return;
+    }
+
+    if (company?.status !== 'active') {
+      setEnrollmentCode(null);
+      setCodeLoading(false);
+      return;
+    }
+
+    setCodeLoading(true);
+    setCodeError(null);
+    void getEnrollmentCode()
+      .then(({ enrollmentCode: code }) => {
+        setEnrollmentCode(code);
+      })
+      .catch((e) => {
+        setEnrollmentCode(null);
+        setCodeError(e instanceof Error ? e.message : 'Não foi possível obter o código.');
+      })
+      .finally(() => setCodeLoading(false));
+  }, [company?.enrollmentCode, company?.status]);
 
   useEffect(() => {
     if (!modalOpen) return;
@@ -196,36 +227,46 @@ export function EmployeesPage() {
         </button>
       </header>
 
-      {enrollmentCode ? (
+      {company?.status === 'active' ? (
         <section className="panel enrollment-code-panel">
           <div className="panel-body">
-            <div className="enrollment-code-row">
-              <div>
-                <h2 className="enrollment-code-title">Código de adesão da empresa</h2>
-                <p className="enrollment-code-lead">
-                  O colaborador abre o app ACAF Connect, vai em <strong>Minha conta</strong> e
-                  informa este código para vincular a empresa e escolher o plano.
-                </p>
+            {codeLoading ? (
+              <p className="enrollment-code-lead">Carregando código de adesão…</p>
+            ) : enrollmentCode ? (
+              <div className="enrollment-code-row">
+                <div>
+                  <h2 className="enrollment-code-title">Código de adesão da empresa</h2>
+                  <p className="enrollment-code-lead">
+                    O colaborador abre o app ACAF Connect, vai em <strong>Minha conta</strong> e
+                    informa este código para vincular a empresa e escolher o plano.
+                  </p>
+                </div>
+                <div className="enrollment-code-value-wrap">
+                  <code className="enrollment-code-value">{enrollmentCode}</code>
+                  <button
+                    type="button"
+                    className="btn btn-secondary btn-sm"
+                    disabled={actionBusyId === 'company-code'}
+                    onClick={() => void onCopyCompanyCode()}
+                  >
+                    Copiar código
+                  </button>
+                </div>
               </div>
-              <div className="enrollment-code-value-wrap">
-                <code className="enrollment-code-value">{enrollmentCode}</code>
-                <button
-                  type="button"
-                  className="btn btn-secondary btn-sm"
-                  disabled={actionBusyId === 'company-code'}
-                  onClick={() => void onCopyCompanyCode()}
-                >
-                  Copiar código
-                </button>
-              </div>
-            </div>
+            ) : (
+              <p className="enrollment-code-lead page-error">
+                {codeError ?? 'Não foi possível carregar o código. Tente sair e entrar novamente.'}
+              </p>
+            )}
           </div>
         </section>
       ) : (
         <section className="panel">
           <div className="panel-body">
             <p className="enrollment-code-lead">
-              O código de adesão da empresa será exibido aqui após a aprovação do cadastro corporativo.
+              Sua empresa está com status <strong>{company?.status ?? 'pendente'}</strong>. O código
+              de adesão aparece após aprovação no <strong>ACAF Admin</strong> (menu Corporativo →
+              Empresas → Aprovar empresa).
             </p>
           </div>
         </section>
