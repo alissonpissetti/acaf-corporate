@@ -35,7 +35,9 @@ export function LoginPage() {
     setFormError(null);
 
     if (apiOnline === false) {
-      setFormError('API indisponível. Inicie o acaf-api (porta 8787) ou verifique VITE_API_URL.');
+      setFormError(
+        'API indisponível. No Coolify, defina API_BACKEND_URL (runtime) com a URL pública da acaf-api.',
+      );
       return;
     }
 
@@ -61,8 +63,9 @@ export function LoginPage() {
 
           {apiOnline === false ? (
             <p className="login-form-error" role="alert">
-              Não foi possível contactar a API. Em desenvolvimento, rode{' '}
-              <code>npm run start:dev</code> na pasta <code>acaf-api</code>.
+              Não foi possível contactar a API. No Coolify, configure{' '}
+              <code>API_BACKEND_URL</code> (variável de <strong>runtime</strong>) com a URL pública da
+              acaf-api (porta 80, sem :8787). O portal usa o proxy <code>/api</code> do nginx.
             </p>
           ) : null}
 

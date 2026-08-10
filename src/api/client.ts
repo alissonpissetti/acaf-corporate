@@ -82,12 +82,20 @@ async function corporateFetch<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 export async function apiHealth(): Promise<boolean> {
-  try {
-    const res = await fetch(apiUrl('/api/health'));
-    return res.ok;
-  } catch {
-    return false;
+  const candidates = [apiUrl('/api/health')];
+  const direct = candidates[0];
+  if (!direct.startsWith('/')) {
+    candidates.push('/api/health');
   }
+  for (const url of candidates) {
+    try {
+      const res = await fetch(url);
+      if (res.ok) return true;
+    } catch {
+      /* tenta próximo */
+    }
+  }
+  return false;
 }
 
 export function listEmployees(): Promise<EmployeeDto[]> {

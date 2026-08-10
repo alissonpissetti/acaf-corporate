@@ -1,8 +1,6 @@
-import { API_URL } from '../config';
+import { apiUrl } from '../config';
 
-export function apiUrl(path: string): string {
-  return `${API_URL}${path}`;
-}
+export { apiUrl };
 
 export async function parseApiError(response: Response, fallback: string): Promise<string> {
   try {
