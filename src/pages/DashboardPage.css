@@ -289,3 +289,66 @@
   border-radius: var(--radius-sm);
   font-size: 0.9375rem;
 }
+
+.enrollment-code-panel .panel-body {
+  padding: 20px;
+}
+
+.enrollment-code-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.enrollment-code-title {
+  margin: 0 0 6px;
+  font-size: 1rem;
+}
+
+.enrollment-code-lead {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.9375rem;
+  max-width: 42rem;
+}
+
+.enrollment-code-value-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.enrollment-code-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 8px 12px;
+  background: var(--surface-muted);
+  border-radius: var(--radius-sm);
+}
+
+.enrollment-code-inline {
+  margin: 16px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.enrollment-code-inline code {
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+.activate-steps {
+  margin: 16px 0 24px;
+  padding-left: 1.25rem;
+  color: var(--text-muted);
+}
+
+.activate-company-name {
+  margin: 12px 0 0;
+}

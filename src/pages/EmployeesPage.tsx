@@ -2,13 +2,15 @@ import { useCallback, useEffect, useState } from 'react';
 import {
   addEmployee,
   employeeStatusLabel,
-  getEmployeeInviteLink,
+  getEmployeeEnrollmentCode,
+  getEnrollmentCode,
   listEmployees,
   patchEmployee,
   sendEmployeeInviteEmail,
   sendEmployeeInviteSms,
   type EmployeeDto,
 } from '../api/client';
+import { useCorporate } from '../corporateContext';
 import { useFlash } from '../flashContext';
 import { copyTextToClipboard } from '../utils/clipboard';
 import { formatCpfInput, formatPhoneInput } from '../utils/personInput';
@@ -21,6 +23,8 @@ function canSendInvite(emp: EmployeeDto): boolean {
 
 export function EmployeesPage() {
   const flash = useFlash();
+  const { company } = useCorporate();
+  const enrollmentCode = company?.enrollmentCode ?? null;
   const [employees, setEmployees] = useState<EmployeeDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -63,6 +67,20 @@ export function EmployeesPage() {
     };
   }, [modalOpen, busy]);
 
+  const onCopyCompanyCode = async () => {
+    setActionBusyId('company-code');
+    try {
+      const code =
+        enrollmentCode ?? (await getEnrollmentCode()).enrollmentCode;
+      await copyTextToClipboard(code);
+      flash.success('Código de adesão copiado.');
+    } catch (e) {
+      flash.error(e instanceof Error ? e.message : 'Erro ao copiar código.');
+    } finally {
+      setActionBusyId(null);
+    }
+  };
+
   const onAdd = async (ev: React.FormEvent) => {
     ev.preventDefault();
     setBusy(true);
@@ -73,7 +91,7 @@ export function EmployeesPage() {
         cpf: cpf || undefined,
         mobilePhone,
       });
-      flash.success('Colaborador cadastrado. Envie o convite quando quiser.');
+      flash.success('Colaborador cadastrado. Envie o código de adesão quando quiser.');
       setModalOpen(false);
       setName('');
       setEmail('');
@@ -90,7 +108,7 @@ export function EmployeesPage() {
   const toggleStatus = async (emp: EmployeeDto) => {
     const next = emp.status === 'inactive' ? 'active' : 'inactive';
     if (emp.status === 'invited' || emp.status === 'pending') {
-      flash.info('Aguardando o colaborador aceitar o convite.');
+      flash.info('Aguardando o colaborador cadastrar no app com o código da empresa.');
       return;
     }
     try {
@@ -107,7 +125,9 @@ export function EmployeesPage() {
     try {
       await sendEmployeeInviteEmail(emp.id);
       flash.success(
-        emp.status === 'pending' ? 'Convite enviado por e-mail.' : 'Convite reenviado por e-mail.',
+        emp.status === 'pending'
+          ? 'Código enviado por e-mail.'
+          : 'Código reenviado por e-mail.',
       );
       await load();
     } catch (e) {
@@ -117,14 +137,16 @@ export function EmployeesPage() {
     }
   };
 
-  const onCopyLink = async (emp: EmployeeDto) => {
+  const onCopyCode = async (emp: EmployeeDto) => {
     setActionBusyId(emp.id);
     try {
-      const { inviteUrl } = await getEmployeeInviteLink(emp.id);
-      await copyTextToClipboard(inviteUrl);
-      flash.success('Link do convite copiado.');
+      const code =
+        enrollmentCode ??
+        (await getEmployeeEnrollmentCode(emp.id)).enrollmentCode;
+      await copyTextToClipboard(code);
+      flash.success('Código de adesão copiado.');
     } catch (e) {
-      flash.error(e instanceof Error ? e.message : 'Erro ao copiar link.');
+      flash.error(e instanceof Error ? e.message : 'Erro ao copiar código.');
     } finally {
       setActionBusyId(null);
     }
@@ -138,7 +160,7 @@ export function EmployeesPage() {
     setActionBusyId(emp.id);
     try {
       await sendEmployeeInviteSms(emp.id);
-      flash.success('Convite enviado por SMS.');
+      flash.success('Código enviado por SMS.');
       await load();
     } catch (e) {
       flash.error(e instanceof Error ? e.message : 'Erro ao enviar SMS.');
@@ -166,13 +188,48 @@ export function EmployeesPage() {
         <div>
           <h1>Colaboradores</h1>
           <p className="page-lead">
-            Cadastre colaboradores e envie convites por e-mail, SMS ou link manual.
+            Cadastre colaboradores e compartilhe o código de adesão para cadastro no app.
           </p>
         </div>
         <button type="button" className="btn btn-primary" onClick={() => setModalOpen(true)}>
           Adicionar colaborador
         </button>
       </header>
+
+      {enrollmentCode ? (
+        <section className="panel enrollment-code-panel">
+          <div className="panel-body">
+            <div className="enrollment-code-row">
+              <div>
+                <h2 className="enrollment-code-title">Código de adesão da empresa</h2>
+                <p className="enrollment-code-lead">
+                  O colaborador abre o app ACAF Connect, vai em <strong>Minha conta</strong> e
+                  informa este código para vincular a empresa e escolher o plano.
+                </p>
+              </div>
+              <div className="enrollment-code-value-wrap">
+                <code className="enrollment-code-value">{enrollmentCode}</code>
+                <button
+                  type="button"
+                  className="btn btn-secondary btn-sm"
+                  disabled={actionBusyId === 'company-code'}
+                  onClick={() => void onCopyCompanyCode()}
+                >
+                  Copiar código
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+      ) : (
+        <section className="panel">
+          <div className="panel-body">
+            <p className="enrollment-code-lead">
+              O código de adesão da empresa será exibido aqui após a aprovação do cadastro corporativo.
+            </p>
+          </div>
+        </section>
+      )}
 
       {error && <p className="page-error">{error}</p>}
 
@@ -222,9 +279,9 @@ export function EmployeesPage() {
                                 type="button"
                                 className="btn btn-ghost btn-sm"
                                 disabled={actionBusy}
-                                onClick={() => void onCopyLink(emp)}
+                                onClick={() => void onCopyCode(emp)}
                               >
-                                Copiar link
+                                Copiar código
                               </button>
                               <button
                                 type="button"
@@ -276,7 +333,8 @@ export function EmployeesPage() {
                   Novo colaborador
                 </h2>
                 <p className="employee-modal-lead">
-                  Cadastre os dados de contato. Depois você envia o convite por e-mail, SMS ou link.
+                  Cadastre os dados de contato. Depois compartilhe o código de adesão da empresa
+                  por e-mail, SMS ou copiando manualmente.
                 </p>
               </div>
               <button
@@ -351,8 +409,8 @@ export function EmployeesPage() {
                 </div>
 
                 <p className="employee-modal-note">
-                  O convite <strong>não é enviado automaticamente</strong>. Após salvar, use as ações na
-                  lista para disparar por e-mail, SMS ou copiar o link.
+                  O cadastro no app é feito pelo colaborador com o <strong>código de adesão</strong>{' '}
+                  da empresa (Minha conta no app ACAF Connect).
                 </p>
               </div>
 

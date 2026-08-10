@@ -11,7 +11,7 @@ export type EmployeeDto = {
   status: 'pending' | 'invited' | 'active' | 'inactive';
   invitedAt: string | null;
   activatedAt: string | null;
-  inviteUrl?: string;
+  enrollmentCode?: string;
 };
 
 export type InvoiceDto = {
@@ -28,6 +28,9 @@ export type InvitePreview = {
   companyName: string;
   email: string;
   expiresAt: string;
+  enrollmentCode?: string;
+  useApp?: boolean;
+  message?: string;
   suggestions?: {
     name?: string;
     cpf?: string;
@@ -48,6 +51,9 @@ function normalizeInvitePreview(data: InvitePreviewResponse): InvitePreview {
     companyName: data.companyName,
     email: data.email,
     expiresAt: data.expiresAt ?? '',
+    enrollmentCode: data.enrollmentCode,
+    useApp: data.useApp,
+    message: data.message,
     suggestions: {
       name: suggestedName,
       cpf: data.suggestions?.cpf,
@@ -127,7 +133,11 @@ export function resendInvite(id: string): Promise<EmployeeDto> {
   });
 }
 
-export function getEmployeeInviteLink(id: string): Promise<{ inviteUrl: string }> {
+export function getEnrollmentCode(): Promise<{ enrollmentCode: string }> {
+  return corporateFetch('/api/corporate/enrollment-code');
+}
+
+export function getEmployeeEnrollmentCode(id: string): Promise<{ enrollmentCode: string }> {
   return corporateFetch(`/api/corporate/employees/${id}/invite-link`);
 }
 
@@ -193,7 +203,7 @@ export function employeeStatusLabel(status: EmployeeDto['status']): string {
     case 'pending':
       return 'Cadastrado';
     case 'invited':
-      return 'Convite enviado';
+      return 'Código enviado';
     case 'inactive':
       return 'Inativo';
     default:

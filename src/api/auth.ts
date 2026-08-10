@@ -21,6 +21,7 @@ export type CompanyDto = {
   email: string;
   phone: string | null;
   status: 'pending' | 'active' | 'suspended';
+  enrollmentCode: string | null;
   createdAt: string;
   updatedAt: string;
   managers?: number;
