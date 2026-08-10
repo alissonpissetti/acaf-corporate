@@ -10,6 +10,7 @@ import {
   type EmployeeDto,
 } from '../api/client';
 import { useFlash } from '../flashContext';
+import { copyTextToClipboard } from '../utils/clipboard';
 import { formatCpfInput, formatPhoneInput } from '../utils/personInput';
 import './DashboardPage.css';
 import '../components/EmployeeModal.css';
@@ -120,7 +121,7 @@ export function EmployeesPage() {
     setActionBusyId(emp.id);
     try {
       const { inviteUrl } = await getEmployeeInviteLink(emp.id);
-      await navigator.clipboard.writeText(inviteUrl);
+      await copyTextToClipboard(inviteUrl);
       flash.success('Link do convite copiado.');
     } catch (e) {
       flash.error(e instanceof Error ? e.message : 'Erro ao copiar link.');
