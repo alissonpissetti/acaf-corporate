@@ -50,7 +50,7 @@ export function DashboardPage() {
       <header className="page-header">
         <h1>Dashboard</h1>
         <p className="page-lead">
-          {company?.tradeName ?? 'Empresa'} — benefício ACAF Connect para colaboradores.
+          {company?.tradeName ?? 'Empresa'} — benefício para colaboradores.
         </p>
       </header>
 

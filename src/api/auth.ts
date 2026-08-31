@@ -1,7 +1,7 @@
 import { apiUrl, parseApiError } from './http';
 
-const TOKEN_KEY = 'acaf_corporate_token';
-const USER_KEY = 'acaf_corporate_user';
+const TOKEN_KEY = 'connect_corporate_token';
+const USER_KEY = 'connect_corporate_user';
 const COMPANY_KEY = 'acaf_corporate_company';
 
 export type CorporateSessionUser = {

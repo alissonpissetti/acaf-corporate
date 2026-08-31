@@ -1,5 +1,5 @@
 import { Outlet } from 'react-router-dom';
-import { AcafConnectLogo } from './AcafConnectLogo';
+import { BrandLogo } from './BrandLogo';
 import { FlashViewport } from './FlashMessage';
 import { SidebarNav } from './SidebarNav';
 import { useCorporate } from '../corporateContext';
@@ -14,7 +14,7 @@ export function AppLayout() {
     <div className="app-shell">
       <aside className="sidebar">
         <div className="sidebar-brand">
-          <AcafConnectLogo height={36} className="acaf-connect-logo--sidebar" />
+          <BrandLogo height={36} className="brand-logo--sidebar" />
           <div className="brand-sub brand-sub-sidebar">Portal corporativo</div>
         </div>
 

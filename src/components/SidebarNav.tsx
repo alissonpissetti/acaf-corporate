@@ -5,6 +5,7 @@ const items = [
   { to: '/', label: 'Dashboard', end: true },
   { to: '/colaboradores', label: 'Colaboradores' },
   { to: '/faturas', label: 'Faturas mensais' },
+  { to: '/atendimento', label: 'Meus chamados' },
 ];
 
 export function SidebarNav() {

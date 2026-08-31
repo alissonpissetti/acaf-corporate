@@ -1,17 +1,17 @@
-# acaf-corporate
+# connect-corporate
 
-Portal corporativo para empresas gerenciarem colaboradores e consultarem faturas do benefício ACAF Connect.
+Portal corporativo para empresas gerenciarem colaboradores e consultarem faturas do benefício.
 
 ## Requisitos
 
 - Node.js 20+
-- [acaf-api](../acaf-api) rodando na porta **8787**
+- [connect-api](../connect-api) rodando na porta **8787**
 - MariaDB configurado (mesmo banco da API)
 
 ## Desenvolvimento
 
 ```bash
-cd acaf-corporate
+cd connect-corporate
 npm install
 npm run dev
 ```
@@ -28,26 +28,20 @@ Copie `.env.example` para `.env` (opcional em dev):
 
 ## Fluxo MVP
 
-1. **Cadastro** em `/cadastro` — empresa fica `pending` até aprovação no acaf-adm
-2. **Admin** aprova em `/companies` no painel acaf-adm
+1. **Cadastro** em `/cadastro` — empresa fica `pending` até aprovação no connect-adm
+2. **Admin** aprova em `/companies` no painel connect-adm
 3. **Login** do gestor RH em `/login`
 4. **Colaboradores** — cadastro dispara convite por e-mail (link visível na resposta em dev)
 5. **Ativação** — colaborador acessa `/ativar?token=...` e define senha
 6. **Faturas** — consulta mensal (colaboradores ativos × valor do benefício)
 
-## Seed demo
-
-Com a API em dev, o `CorporateSeedService` cria automaticamente (se não houver empresas):
-
-- Empresa **Empresa Demo** (CNPJ `11.222.333/0001-81`, status `active`)
-- Gestor: `gestor@empresademo.com.br` / `demo123`
-- 3 colaboradores (ativo, convidado, inativo)
+Cadastros (empresas, parceiros, modalidades, financeiro etc.) devem ser criados pelo **connect-adm** ou pelos portais correspondentes. Não há seed automático de dados de demonstração.
 
 ## Portas
 
 | App | Porta |
 |-----|-------|
-| acaf-api | 8787 |
-| acaf-corporate | 5177 |
-| acaf-adm | 5175 (padrão) |
-| acaf-partner | 5176 |
+| connect-api | 8787 |
+| connect-corporate | 5177 |
+| connect-adm | 5175 (padrão) |
+| connect-partner | 5176 |

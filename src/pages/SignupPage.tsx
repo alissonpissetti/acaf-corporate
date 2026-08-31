@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
-import { AcafConnectLogo } from '../components/AcafConnectLogo';
+import { BrandLogo } from '../components/BrandLogo';
 import { corporateSignup } from '../api/auth';
 import { apiHealth } from '../api/client';
 import { useCorporate } from '../corporateContext';
@@ -78,10 +78,10 @@ export function SignupPage() {
     <div className="login-shell login-shell-simple">
       <div className="login-panel login-panel-full login-panel-wide">
         <div className="login-panel-inner">
-          <AcafConnectLogo height={40} className="acaf-connect-logo--login" />
+          <BrandLogo height={40} className="brand-logo--login" />
           <h1 className="login-panel-title">Cadastrar empresa</h1>
           <p className="login-panel-lead">
-            Preencha os dados da empresa e do gestor de RH. Após o cadastro, aguarde aprovação da ACAF.
+            Preencha os dados da empresa e do gestor de RH. Após o cadastro, aguarde aprovação da plataforma.
           </p>
 
           {success ? (

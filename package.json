@@ -1,6 +1,6 @@
 {
-  "name": "acaf-corporate",
-  "description": "Portal corporativo — benefício ACAF Connect para empresas.",
+  "name": "connect-corporate",
+  "description": "Portal corporativo — benefício para empresas.",
   "private": true,
   "version": "0.1.0",
   "type": "module",

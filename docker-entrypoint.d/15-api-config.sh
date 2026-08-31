@@ -19,12 +19,12 @@ esac
 export API_BACKEND_URL="$url"
 
 if echo "$url" | grep -q '127.0.0.1:8787'; then
-  echo "[acaf-corporate] AVISO: API_BACKEND_URL aponta a 127.0.0.1:8787 — defina a URL pública da acaf-api no Coolify (runtime)." >&2
+  echo "[connect-corporate] AVISO: API_BACKEND_URL aponta a 127.0.0.1:8787 — defina a URL pública da connect-api no Coolify (runtime)." >&2
 fi
 
-echo "[acaf-corporate] nginx proxy /api → ${API_BACKEND_URL}/api/" >&2
+echo "[connect-corporate] nginx proxy /api → ${API_BACKEND_URL}/api/" >&2
 
-direct="${ACAF_API_DIRECT:-}"
+direct="${CONNECT_API_DIRECT:-}"
 
 if [ "$direct" = "1" ] || [ "$direct" = "true" ]; then
   escaped="${url//\\/\\\\}"
@@ -35,5 +35,5 @@ else
 fi
 
 cat > /usr/share/nginx/html/api-config.js <<EOF
-window.__ACAF_API_URL__ = "${browser_url}";
+window.__CONNECT_API_URL__ = "${browser_url}";
 EOF

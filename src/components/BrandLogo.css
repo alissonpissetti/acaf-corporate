@@ -1,4 +1,4 @@
-.acaf-connect-logo {
+.brand-logo {
   display: block;
   width: auto;
   max-width: 100%;
@@ -7,10 +7,10 @@
   object-position: left center;
 }
 
-.acaf-connect-logo--sidebar {
+.brand-logo--sidebar {
   max-width: 200px;
 }
 
-.acaf-connect-logo--login {
+.brand-logo--login {
   max-width: min(280px, 100%);
 }

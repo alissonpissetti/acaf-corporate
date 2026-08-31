@@ -237,7 +237,7 @@ export function EmployeesPage() {
                 <div>
                   <h2 className="enrollment-code-title">Código de adesão da empresa</h2>
                   <p className="enrollment-code-lead">
-                    O colaborador abre o app ACAF Connect, vai em <strong>Minha conta</strong> e
+                    O colaborador abre o aplicativo, vai em <strong>Minha conta</strong> e
                     informa este código para vincular a empresa e escolher o plano.
                   </p>
                 </div>
@@ -265,7 +265,7 @@ export function EmployeesPage() {
           <div className="panel-body">
             <p className="enrollment-code-lead">
               Sua empresa está com status <strong>{company?.status ?? 'pendente'}</strong>. O código
-              de adesão aparece após aprovação no <strong>ACAF Admin</strong> (menu Corporativo →
+              de adesão aparece após aprovação no <strong>Painel Admin</strong> (menu Corporativo →
               Empresas → Aprovar empresa).
             </p>
           </div>
@@ -451,7 +451,7 @@ export function EmployeesPage() {
 
                 <p className="employee-modal-note">
                   O cadastro no app é feito pelo colaborador com o <strong>código de adesão</strong>{' '}
-                  da empresa (Minha conta no app ACAF Connect).
+                  da empresa (Minha conta no aplicativo).
                 </p>
               </div>
 

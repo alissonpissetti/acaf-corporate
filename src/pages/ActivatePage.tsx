@@ -40,7 +40,7 @@ export function ActivatePage() {
           ) : (
             <>
               <p className="login-panel-lead">
-                O benefício ACAF Connect é ativado no <strong>app mobile</strong>, não neste portal.
+                O benefício é ativado no <strong>app mobile</strong>, não neste portal.
               </p>
               {companyName && (
                 <p className="activate-company-name">
@@ -54,7 +54,7 @@ export function ActivatePage() {
                 </div>
               )}
               <ol className="activate-steps">
-                <li>Abra o app ACAF Connect.</li>
+                <li>Abra o aplicativo.</li>
                 <li>Vá em <strong>Minha conta</strong>.</li>
                 <li>Informe o código de adesão da sua empresa.</li>
                 <li>Escolha o plano e finalize o cadastro.</li>

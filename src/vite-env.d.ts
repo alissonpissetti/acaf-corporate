@@ -9,5 +9,5 @@ interface ImportMeta {
 }
 
 interface Window {
-  __ACAF_API_URL__?: string;
+  __CONNECT_API_URL__?: string;
 }

@@ -1,1 +1,1 @@
-window.__ACAF_API_URL__ = '';
+window.__CONNECT_API_URL__ = '';

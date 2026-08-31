@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
-import { AcafConnectLogo } from '../components/AcafConnectLogo';
+import { BrandLogo } from '../components/BrandLogo';
 import { getCorporateToken } from '../api/auth';
 import { apiHealth } from '../api/client';
 import { useCorporate } from '../corporateContext';
@@ -36,7 +36,7 @@ export function LoginPage() {
 
     if (apiOnline === false) {
       setFormError(
-        'API indisponível. No Coolify, defina API_BACKEND_URL (runtime) com a URL pública da acaf-api.',
+        'API indisponível. No Coolify, defina API_BACKEND_URL (runtime) com a URL pública da connect-api.',
       );
       return;
     }
@@ -55,17 +55,17 @@ export function LoginPage() {
     <div className="login-shell login-shell-simple">
       <div className="login-panel login-panel-full">
         <div className="login-panel-inner">
-          <AcafConnectLogo height={48} className="acaf-connect-logo--login" />
+          <BrandLogo height={48} className="brand-logo--login" />
           <h1 className="login-panel-title">Portal corporativo</h1>
           <p className="login-panel-lead">
-            Gestão de colaboradores e benefício ACAF Connect para sua empresa.
+            Gestão de colaboradores e benefício para sua empresa.
           </p>
 
           {apiOnline === false ? (
             <p className="login-form-error" role="alert">
               Não foi possível contactar a API. No Coolify, configure{' '}
               <code>API_BACKEND_URL</code> (variável de <strong>runtime</strong>) com a URL pública da
-              acaf-api (porta 80, sem :8787). O portal usa o proxy <code>/api</code> do nginx.
+              connect-api (porta 80, sem :8787). O portal usa o proxy <code>/api</code> do nginx.
             </p>
           ) : null}
 
