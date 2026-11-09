@@ -16,7 +16,7 @@
 }
 
 .login-link {
-  color: var(--orange);
+  color: var(--accent);
   font-weight: 600;
   text-decoration: none;
 }
@@ -42,8 +42,6 @@
 .signup-fieldset legend {
   font-size: 0.75rem;
   font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
   color: var(--text-muted);
   padding: 0 4px;
 }

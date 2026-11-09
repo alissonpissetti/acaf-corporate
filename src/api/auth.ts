@@ -97,6 +97,60 @@ export async function corporateLogin(login: string, password: string): Promise<C
   return res.json() as Promise<CorporateLoginResult>;
 }
 
+export type OtpPurpose = 'login' | 'password_reset';
+
+export async function corporateRequestOtp(
+  mobilePhone: string,
+  purpose: OtpPurpose,
+): Promise<{ ok: boolean; message?: string }> {
+  const res = await fetch(apiUrl('/api/corporate/auth/otp/request'), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ mobilePhone, purpose }),
+  });
+
+  if (!res.ok) {
+    throw new Error(await parseApiError(res, 'Não foi possível enviar o código.'));
+  }
+
+  return res.json() as Promise<{ ok: boolean; message?: string }>;
+}
+
+export async function corporateLoginWithOtp(
+  mobilePhone: string,
+  code: string,
+): Promise<CorporateLoginResult> {
+  const res = await fetch(apiUrl('/api/corporate/auth/otp/login'), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ mobilePhone, code }),
+  });
+
+  if (!res.ok) {
+    throw new Error(await parseApiError(res, 'Código inválido ou expirado.'));
+  }
+
+  return res.json() as Promise<CorporateLoginResult>;
+}
+
+export async function corporateResetPasswordWithOtp(
+  mobilePhone: string,
+  code: string,
+  newPassword: string,
+): Promise<{ ok: boolean; message?: string }> {
+  const res = await fetch(apiUrl('/api/corporate/auth/password/reset'), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ mobilePhone, code, newPassword }),
+  });
+
+  if (!res.ok) {
+    throw new Error(await parseApiError(res, 'Não foi possível redefinir a senha.'));
+  }
+
+  return res.json() as Promise<{ ok: boolean; message?: string }>;
+}
+
 export async function corporateSignup(body: {
   legalName: string;
   tradeName?: string;

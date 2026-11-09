@@ -1,24 +1,65 @@
+/*
+ * Movly — tokens de marca
+ * "A energia de quem treina e a calma do bem-estar."
+ *  - limão (#CBF74F): ação, movimento, destaques. Nunca como texto sobre branco.
+ *  - roxo (#8254E4): firmeza — texto de marca, botões principais, assinatura.
+ *  - gradiente azul-céu (#89B4E0 → #7579E5): calma e confiança, superfícies amplas.
+ */
 :root {
-  --foreground: #1c1c1e;
-  --foreground-secondary: #3a3a3c;
-  --text-muted: #8e8e93;
-  --border: #e5e5ea;
-  --border-strong: #d1d1d6;
+  /* Paleta oficial */
+  --movly-lime: #cbf74f;
+  --movly-purple: #8254e4;
+  --movly-sky: #89b4e0;
+  --movly-periwinkle: #7579e5;
+  --movly-gradient: linear-gradient(90deg, var(--movly-sky) 0%, var(--movly-periwinkle) 100%);
+  --movly-gradient-diagonal: linear-gradient(135deg, var(--movly-sky) 0%, var(--movly-periwinkle) 55%, var(--movly-purple) 100%);
+
+  /* Derivados (para estados e leitura) */
+  --movly-purple-strong: #6a3fd0;
+  --movly-purple-deep: #2a1b57;
+  --movly-ink: #17142b;
+
+  /* Papéis de cor usados pelos componentes */
+  --accent: var(--movly-purple);
+  --accent-strong: var(--movly-purple-strong);
+  --accent-soft: rgba(130, 84, 228, 0.1);
+  --accent-border: rgba(130, 84, 228, 0.3);
+  --highlight: var(--movly-lime);
+  --on-highlight: var(--movly-purple-deep);
+  --on-accent: #ffffff;
+
+  /* Neutros com leve tom violeta */
+  --foreground: var(--movly-ink);
+  --foreground-secondary: #4a4660;
+  --text-muted: #858199;
+  --border: #ebeaf1;
+  --border-strong: #d9d7e3;
   --surface: #ffffff;
-  --surface-muted: #f7f7f8;
-  --orange: #e8881c;
-  --orange-dark: #c97416;
-  --orange-soft: rgba(232, 136, 28, 0.1);
+  --surface-muted: #f5f5f8;
+  --surface-sunken: #efeef4;
+
   --success: #16a34a;
   --error: #dc2626;
+
+  /* Tipografia (ver src/styles/fonts.css) */
+  --font-display: 'Unbounded', 'Figtree', system-ui, sans-serif;
+  --font-body: 'Figtree', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  /* Forma: cantos generosos, pílulas — "fluida no ponto certo" */
   --sidebar-width: 280px;
-  --radius: 12px;
-  --radius-sm: 8px;
-  --shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-  font-family: 'Inter', system-ui, sans-serif;
+  --sidebar-rail-width: 76px;
+  --radius-lg: 28px;
+  --radius: 20px;
+  --radius-sm: 12px;
+  --radius-pill: 999px;
+  --shadow: none;
+  --shadow-lg: 0 12px 32px rgba(42, 27, 87, 0.12);
+
+  font-family: var(--font-body);
   line-height: 1.5;
   color: var(--foreground);
   background: var(--surface-muted);
+  -webkit-font-smoothing: antialiased;
 }
 
 *,
@@ -56,22 +97,57 @@ p {
 }
 
 .page-title {
-  font-size: 1.625rem;
-  font-weight: 700;
+  font-family: var(--font-display);
+  font-size: 1.375rem;
+  font-weight: 500;
+  line-height: 1.2;
   letter-spacing: -0.02em;
 }
 
 .page-subtitle {
-  font-size: 0.875rem;
+  font-size: 0.9375rem;
+  line-height: 1.5;
   color: var(--text-muted);
-  margin-top: 4px;
-  max-width: 52ch;
+  margin-top: 6px;
+  max-width: 68ch;
 }
 
 .section-title {
-  font-size: 1.0625rem;
-  font-weight: 600;
+  font-family: var(--font-display);
+  font-size: 0.9375rem;
+  font-weight: 500;
   letter-spacing: -0.02em;
+}
+
+/*
+ * Grão de filme — textura das peças do manual (gradientes "granulados").
+ * Uso: adicione .movly-grain a uma superfície com gradiente (position relative).
+ */
+.movly-grain {
+  position: relative;
+  isolation: isolate;
+}
+
+.movly-grain::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.5 0 0 0 0 0.5 0 0 0 0 0.5 0 0 0 0.55 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  mix-blend-mode: overlay;
+  opacity: 0.55;
+}
+
+::selection {
+  background: var(--movly-lime);
+  color: var(--movly-purple-deep);
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 .card {
@@ -95,12 +171,12 @@ p {
   justify-content: center;
   gap: 8px;
   padding: 10px 18px;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-pill);
   font-weight: 600;
   font-size: 0.875rem;
   border: none;
   cursor: pointer;
-  transition: background 0.15s, opacity 0.15s;
+  transition: background 0.15s, opacity 0.15s, transform 0.15s, box-shadow 0.15s;
 }
 
 .btn:disabled {
@@ -109,18 +185,39 @@ p {
 }
 
 .btn-primary {
-  background: linear-gradient(90deg, #f0a035, var(--orange));
-  color: #fff;
+  background: var(--accent);
+  color: var(--on-accent);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.2) inset;
 }
 
 .btn-primary:hover:not(:disabled) {
-  filter: brightness(1.05);
+  background: var(--accent-strong);
+}
+
+.btn-primary:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+/* Ação de energia: limão com texto roxo profundo (usar com moderação) */
+.btn-highlight {
+  background: var(--highlight);
+  color: var(--on-highlight);
+}
+
+.btn-highlight:hover:not(:disabled) {
+  filter: brightness(0.96);
 }
 
 .btn-secondary {
   background: var(--surface);
   border: 1px solid var(--border-strong);
   color: var(--foreground);
+}
+
+.btn-secondary:focus-visible,
+.btn-primary:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 .btn-secondary:hover:not(:disabled) {
@@ -133,6 +230,37 @@ p {
   border: none;
 }
 
+.btn-ghost:hover:not(:disabled) {
+  background: var(--surface-muted);
+}
+
+.btn-link {
+  display: inline-flex;
+  align-items: center;
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--accent-strong);
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.btn-link:hover:not(:disabled) {
+  text-decoration: underline;
+  color: var(--accent);
+}
+
+.btn-link.danger {
+  color: #b42318;
+}
+
+.btn-link.danger:hover:not(:disabled) {
+  color: #991b1b;
+}
+
 .field {
   display: flex;
   flex-direction: column;
@@ -140,11 +268,9 @@ p {
 }
 
 .field label {
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--foreground-secondary);
 }
 
 .field input,
@@ -159,8 +285,9 @@ p {
 .field input:focus,
 .field textarea:focus,
 .field select:focus {
-  outline: 2px solid var(--orange-soft);
-  border-color: var(--orange);
+  outline: 3px solid var(--accent-soft);
+  outline-offset: 0;
+  border-color: var(--accent);
 }
 
 .chip {
@@ -174,19 +301,30 @@ p {
   border: 1px solid var(--border);
 }
 
+button.chip {
+  cursor: pointer;
+  color: var(--foreground-secondary);
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+button.chip:hover:not(.chip-active) {
+  border-color: var(--border-strong);
+  background: var(--surface);
+}
+
+/* Tag da marca (manual, p.2): pílula limão com texto roxo */
 .chip-active {
-  background: var(--orange-soft);
-  border-color: rgba(232, 136, 28, 0.35);
-  color: var(--orange-dark);
+  background: var(--movly-lime);
+  border-color: var(--movly-lime);
+  color: var(--movly-purple-deep);
+  font-weight: 600;
 }
 
 .badge {
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   font-weight: 600;
-  padding: 3px 8px;
-  border-radius: 6px;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  padding: 3px 10px;
+  border-radius: 999px;
 }
 
 .badge-open {
@@ -220,7 +358,8 @@ p {
 .stat-card .value {
   font-size: 1.5rem;
   font-weight: 700;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
 }
 
 .stat-card .label {
@@ -250,9 +389,7 @@ table.data-table td {
 }
 
 table.data-table th {
-  font-size: 0.6875rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  font-size: 0.75rem;
   color: var(--text-muted);
   font-weight: 600;
   background: var(--surface-muted);
@@ -262,13 +399,64 @@ table.data-table tr:last-child td {
   border-bottom: none;
 }
 
+/* Dica de contexto: discreta, não compete com o conteúdo */
 .toast-hint {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  max-width: 72ch;
   font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--foreground-secondary);
+  padding: 10px 14px;
+  background: transparent;
+  border: none;
+  border-left: 3px solid var(--movly-sky);
+  border-radius: 0;
+}
+
+/* Botões compactos para ações em linha (tabelas, listas) */
+.btn-sm {
+  padding: 6px 12px;
+  font-size: 0.8125rem;
+}
+
+.btn-ghost.danger,
+.btn-secondary.danger {
+  color: #b42318;
+}
+
+.btn-ghost.danger:hover:not(:disabled) {
+  background: #fef3f2;
+}
+
+/* Linha de tabela clicável */
+table.data-table tbody tr {
+  transition: background 0.12s ease;
+}
+
+table.data-table tbody tr:hover {
+  background: var(--surface-muted);
+}
+
+table.data-table td {
+  vertical-align: middle;
+}
+
+/* Estado vazio padrão */
+.empty-state {
+  padding: 28px 20px;
+  text-align: center;
   color: var(--text-muted);
-  padding: 12px 16px;
-  background: var(--orange-soft);
-  border-radius: var(--radius-sm);
-  border: 1px solid rgba(232, 136, 28, 0.25);
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.empty-state strong {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--foreground);
+  font-weight: 600;
 }
 
 .page-stack {
@@ -324,9 +512,16 @@ table.data-table tr:last-child td {
 }
 
 .toggle input:checked + span {
-  background: var(--orange);
+  background: var(--accent);
 }
 
 .toggle input:checked + span::after {
   transform: translateX(18px);
+}
+
+/* Títulos de página (componentes que usam .page-header h1) */
+.page-header h1 {
+  font-family: var(--font-display);
+  font-weight: 500;
+  letter-spacing: -0.025em;
 }

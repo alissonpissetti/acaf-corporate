@@ -43,15 +43,13 @@
 }
 
 .stat-card-highlight {
-  border-color: var(--orange);
-  background: linear-gradient(135deg, rgba(240, 160, 53, 0.06), transparent);
+  border-color: var(--accent-border);
+  background: linear-gradient(135deg, var(--accent-soft), transparent);
 }
 
 .stat-label {
   font-size: 0.75rem;
   color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
 }
 
 .stat-value {
@@ -106,8 +104,6 @@
   border-radius: 999px;
   font-size: 0.6875rem;
   font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
 }
 
 .badge-muted {
@@ -159,8 +155,6 @@
 
 .data-table th {
   font-size: 0.6875rem;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
   color: var(--text-muted);
   font-weight: 600;
 }
@@ -351,4 +345,140 @@
 
 .activate-company-name {
   margin: 12px 0 0;
+}
+
+
+/* Destaque do topo: roxo da marca, número em Unbounded com o "." limão do logo */
+.corp-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 24px 40px;
+  padding: 32px 36px;
+  border-radius: var(--radius-lg);
+  background: var(--movly-purple);
+  color: #fff;
+  overflow: hidden;
+}
+
+.corp-hero > * {
+  position: relative;
+  z-index: 1;
+}
+
+.corp-hero.movly-grain::after {
+  opacity: 0.3;
+}
+
+.corp-hero-label {
+  margin: 0 0 8px;
+  font-size: 0.9375rem;
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.corp-hero-value {
+  display: flex;
+  align-items: baseline;
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(3rem, 7vw, 5rem);
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: -0.05em;
+  color: var(--movly-lime);
+  font-variant-numeric: tabular-nums;
+}
+
+.corp-hero-dot {
+  width: 0.2em;
+  height: 0.2em;
+  margin-left: 0.06em;
+  border-radius: 0.06em;
+  background: var(--movly-lime);
+}
+
+.corp-hero-meta {
+  margin: 14px 0 0;
+  font-size: 0.9375rem;
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.corp-hero-side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.btn.corp-hero-cta {
+  background: var(--movly-lime);
+  color: var(--movly-purple-deep);
+  padding: 12px 22px;
+}
+
+.btn.corp-hero-cta:hover {
+  background: #d6fa6e;
+}
+
+.corp-hero-link {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #fff;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.corp-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.corp-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 20px 22px;
+  border-left: 1px solid var(--border);
+}
+
+.corp-stat:first-child {
+  border-left: 0;
+}
+
+.corp-stat .stat-label {
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+}
+
+.corp-stat .stat-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 760px) {
+  .corp-hero {
+    grid-template-columns: 1fr;
+    padding: 24px;
+  }
+
+  .corp-hero-side {
+    align-items: flex-start;
+  }
+
+  .corp-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .corp-stat:nth-child(3) {
+    border-left: 0;
+  }
+
+  .corp-stat:nth-child(n + 3) {
+    border-top: 1px solid var(--border);
+  }
 }

@@ -1,16 +1,54 @@
 .brand-logo {
-  display: block;
-  width: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
   max-width: 100%;
-  height: auto;
+  line-height: 0;
+}
+
+.brand-logo-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
   object-fit: contain;
-  object-position: left center;
 }
 
 .brand-logo--sidebar {
-  max-width: 200px;
+  max-width: 156px;
 }
 
 .brand-logo--login {
-  max-width: min(280px, 100%);
+  max-width: min(220px, 100%);
+}
+
+.brand-mark {
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  flex-shrink: 0;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: 12px;
+  font-family: var(--font-display);
+  font-weight: 800;
+  line-height: 1;
+  text-align: center;
+}
+
+.brand-mark--purple {
+  background: var(--movly-purple);
+  color: var(--movly-lime);
+}
+
+.brand-mark--lime {
+  background: var(--movly-lime);
+  color: var(--movly-purple-deep);
+}
+
+.brand-mark-svg {
+  display: block;
+  flex-shrink: 0;
 }

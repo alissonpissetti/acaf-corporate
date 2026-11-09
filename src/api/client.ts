@@ -12,6 +12,78 @@ export type EmployeeDto = {
   invitedAt: string | null;
   activatedAt: string | null;
   enrollmentCode?: string;
+  billing?: {
+    monthKey: string;
+    includedInMonthlyInvoice: boolean;
+    invoiceStatus: 'open' | 'paid' | null;
+  };
+};
+
+export type PartnerClientCheckInRow = {
+  id: string;
+  unitId: string;
+  unitName: string;
+  type: 'daily_pass' | 'connect_member' | string;
+  validatedAt: string;
+  code: string;
+};
+
+export type EmployeesUsageReport = {
+  monthKey: string;
+  company: { id: string; tradeName: string; legalName: string };
+  totals: {
+    employees: number;
+    memberCheckInDaysInMonth: number;
+    dailyPassVisitDaysInMonth: number;
+  };
+  rows: Array<{
+    employeeId: string;
+    name: string;
+    email: string;
+    status: EmployeeDto['status'];
+    memberCheckInDaysInMonth: number;
+    dailyPassVisitDaysInMonth: number;
+    subscriptionPlanId?: string;
+    subscriptionPlanName?: string;
+    relationship: string;
+  }>;
+  byPlan: Array<{
+    subscriptionPlanId: string | null;
+    subscriptionPlanName: string;
+    employeeCount: number;
+    sumMemberCheckInDays: number;
+    sumDailyPassVisitDays: number;
+  }>;
+};
+
+export type EmployeeUsageResponse = {
+  employee: EmployeeDto;
+  company: { id: string; tradeName: string; legalName: string };
+  usage: {
+    holderKey: string;
+    name: string;
+    relationship: string;
+    totalCheckIns: number;
+    checkInsThisMonth: number;
+    dailyPassesTotal: number;
+    dailyPassesThisMonth: number;
+    lastVisit?: string;
+    companyName?: string;
+    checkIns: PartnerClientCheckInRow[];
+    studentRecords: Array<{
+      id: string;
+      unitId: string;
+      channel: string;
+      checkInsThisMonth: number;
+      dailyPassesThisMonth: number;
+      lastVisit: string;
+    }>;
+    primaryHistory: {
+      connectPlanName?: string;
+      primaryCheckInsSinceFirst?: number;
+      changes: Array<{ changedAt: string; toUnitName: string | null; fromUnitName: string | null }>;
+    };
+  };
 };
 
 export type InvoiceDto = {
@@ -115,6 +187,15 @@ export function listEmployees(): Promise<EmployeeDto[]> {
   return corporateFetch('/api/corporate/employees');
 }
 
+export function getEmployeesUsageReport(monthKey: string): Promise<EmployeesUsageReport> {
+  const q = new URLSearchParams({ monthKey });
+  return corporateFetch(`/api/corporate/employees/usage-report?${q.toString()}`);
+}
+
+export function getEmployeeUsage(id: string): Promise<EmployeeUsageResponse> {
+  return corporateFetch(`/api/corporate/employees/${encodeURIComponent(id)}/usage`);
+}
+
 export function addEmployee(body: {
   name: string;
   email: string;
@@ -124,6 +205,27 @@ export function addEmployee(body: {
   return corporateFetch('/api/corporate/employees', {
     method: 'POST',
     body: JSON.stringify(body),
+  });
+}
+
+export type EmployeesBulkImportResult = {
+  created: number;
+  skipped: number;
+  failed: number;
+  details: Array<{
+    index: number;
+    email?: string;
+    outcome: 'created' | 'skipped' | 'error';
+    message?: string;
+  }>;
+};
+
+export function addEmployeesBulk(
+  employees: Array<{ name: string; email: string; cpf?: string; mobilePhone: string }>,
+): Promise<EmployeesBulkImportResult> {
+  return corporateFetch('/api/corporate/employees/bulk', {
+    method: 'POST',
+    body: JSON.stringify({ employees }),
   });
 }
 
@@ -210,10 +312,32 @@ export function employeeStatusLabel(status: EmployeeDto['status']): string {
     case 'pending':
       return 'Cadastrado';
     case 'invited':
-      return 'Código enviado';
+      return 'Convite enviado';
     case 'inactive':
       return 'Inativo';
     default:
       return status;
   }
+}
+
+/** Linha secundária: fatura do mês (apenas colaboradores ativos entram no valor da fatura). */
+export function employeeBillingShortLabel(emp: EmployeeDto): string | null {
+  const b = emp.billing;
+  if (!b) return null;
+  if (emp.status !== 'active') {
+    return `Fatura ${b.monthKey}: não cobrado (inativo ou ainda sem benefício ativo)`;
+  }
+  if (b.invoiceStatus === 'paid') {
+    return `Fatura ${b.monthKey}: paga`;
+  }
+  if (b.invoiceStatus === 'open') {
+    return `Fatura ${b.monthKey}: em aberto (incluído no valor por colaborador ativo)`;
+  }
+  return `Fatura ${b.monthKey}: —`;
+}
+
+export function checkInTypeLabel(type: string): string {
+  if (type === 'daily_pass') return 'Diária';
+  if (type === 'connect_member') return 'Check-in (plano)';
+  return type;
 }

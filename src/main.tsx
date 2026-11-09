@@ -4,6 +4,7 @@ import { BrowserRouter } from 'react-router-dom';
 import App from './App';
 import { FlashProvider } from './flashContext';
 import { CorporateProvider } from './corporateContext';
+import './styles/fonts.css';
 import './styles/global.css';
 import './components/extras.css';
 

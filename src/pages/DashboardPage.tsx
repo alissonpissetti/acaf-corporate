@@ -48,28 +48,49 @@ export function DashboardPage() {
   return (
     <div className="page-stack">
       <header className="page-header">
-        <h1>Dashboard</h1>
-        <p className="page-lead">
-          {company?.tradeName ?? 'Empresa'} — benefício para colaboradores.
-        </p>
+        <h1>Visão geral</h1>
+        <p className="page-lead">{company?.tradeName ?? 'Sua empresa'} · benefício de bem-estar dos colaboradores</p>
       </header>
 
       {error && <p className="page-error">{error}</p>}
 
-      <div className="stat-grid">
-        <div className="stat-card">
-          <span className="stat-label">Colaboradores ativos</span>
+      <section className="corp-hero movly-grain" aria-label="Resumo do benefício">
+        <div className="corp-hero-main">
+          <p className="corp-hero-label">Colaboradores com o benefício ativo</p>
+          <p className="corp-hero-value">
+            {stats.active}
+            <span className="corp-hero-dot" aria-hidden="true" />
+          </p>
+          <p className="corp-hero-meta">
+            {stats.awaitingActivation > 0
+              ? `${stats.awaitingActivation} ${stats.awaitingActivation === 1 ? 'convite aguarda' : 'convites aguardam'} ativação no app.`
+              : 'Todos os convites enviados já foram ativados.'}
+          </p>
+        </div>
+        <div className="corp-hero-side">
+          <Link to="/colaboradores" className="btn corp-hero-cta">
+            Gerenciar colaboradores
+          </Link>
+          <Link to="/faturas" className="corp-hero-link">
+            Ver faturas
+          </Link>
+        </div>
+      </section>
+
+      <div className="corp-stats">
+        <div className="corp-stat">
+          <span className="stat-label">Ativos</span>
           <strong className="stat-value">{stats.active}</strong>
         </div>
-        <div className="stat-card">
+        <div className="corp-stat">
           <span className="stat-label">Aguardando ativação</span>
           <strong className="stat-value">{stats.awaitingActivation}</strong>
         </div>
-        <div className="stat-card">
+        <div className="corp-stat">
           <span className="stat-label">Total cadastrados</span>
           <strong className="stat-value">{stats.total}</strong>
         </div>
-        <div className="stat-card stat-card-highlight">
+        <div className="corp-stat">
           <span className="stat-label">Fatura do mês</span>
           <strong className="stat-value">
             {stats.currentInvoice ? formatBrl(stats.currentInvoice.totalAmount) : '—'}
@@ -80,15 +101,6 @@ export function DashboardPage() {
             </span>
           )}
         </div>
-      </div>
-
-      <div className="dashboard-actions">
-        <Link to="/colaboradores" className="btn btn-primary">
-          Gerenciar colaboradores
-        </Link>
-        <Link to="/faturas" className="btn btn-ghost">
-          Ver faturas
-        </Link>
       </div>
 
       {stats.currentInvoice && (

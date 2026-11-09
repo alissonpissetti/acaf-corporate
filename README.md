@@ -31,7 +31,7 @@ Copie `.env.example` para `.env` (opcional em dev):
 1. **Cadastro** em `/cadastro` — empresa fica `pending` até aprovação no connect-adm
 2. **Admin** aprova em `/companies` no painel connect-adm
 3. **Login** do gestor RH em `/login`
-4. **Colaboradores** — cadastro dispara convite por e-mail (link visível na resposta em dev)
+4. **Colaboradores** — cadastro individual ou **importação em lote** (CSV / colar do Excel: nome, e-mail, celular, CPF opcional); convite por e-mail conforme fluxo (link visível na resposta em dev)
 5. **Ativação** — colaborador acessa `/ativar?token=...` e define senha
 6. **Faturas** — consulta mensal (colaboradores ativos × valor do benefício)
 

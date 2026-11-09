@@ -9,6 +9,7 @@ import {
 } from '../api/support';
 import { useSupport } from '../components/SupportProvider';
 import { useFlash } from '../flashContext';
+import './DashboardPage.css';
 
 const API_PREFIX = '/api/corporate/support';
 
@@ -82,8 +83,8 @@ export function SupportTicketsPage() {
   };
 
   return (
-    <div className="page-shell">
-      <header className="page-header">
+    <div className="page-stack">
+      <header className="page-header page-header-row">
         <div>
           <h1>Meus chamados</h1>
           <p className="page-lead">Acompanhe solicitações abertas com a nossa equipe.</p>

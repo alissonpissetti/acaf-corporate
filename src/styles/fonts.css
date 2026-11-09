@@ -1,0 +1,81 @@
+/*
+ * Tipografia Movly
+ * ----------------
+ * Manual da marca: Soiren (principal) e Proxima Nova Semibold (secundária).
+ * As duas são fontes comerciais. Enquanto a licença web não estiver em mãos,
+ * o portal usa substitutas livres (OFL), self-hosted em /public/fonts:
+ *   - Unbounded  → no lugar de Soiren (geométrica, larga, "a" e "g" de um andar)
+ *   - Figtree    → no lugar de Proxima Nova (texto corrido, tabelas, formulários)
+ *
+ * Para trocar pelas oficiais quando houver licença web: coloque os .woff2 em
+ * /public/fonts/, declare um @font-face para cada um aqui e coloque o nome
+ * no início de --font-display / --font-body (src/styles/global.css).
+ * Não usamos local() de propósito: o portal deve renderizar igual em
+ * qualquer máquina, tenha ela a fonte instalada ou não.
+ */
+
+/* Unbounded (display) */
+@font-face {
+  font-family: 'Unbounded';
+  src: url('/fonts/unbounded-latin-400-normal.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Unbounded';
+  src: url('/fonts/unbounded-latin-500-normal.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Unbounded';
+  src: url('/fonts/unbounded-latin-600-normal.woff2') format('woff2');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Unbounded';
+  src: url('/fonts/unbounded-latin-700-normal.woff2') format('woff2');
+  font-weight: 700 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Figtree (texto) */
+@font-face {
+  font-family: 'Figtree';
+  src: url('/fonts/figtree-latin-400-normal.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Figtree';
+  src: url('/fonts/figtree-latin-500-normal.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Figtree';
+  src: url('/fonts/figtree-latin-600-normal.woff2') format('woff2');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Figtree';
+  src: url('/fonts/figtree-latin-700-normal.woff2') format('woff2');
+  font-weight: 700 800;
+  font-style: normal;
+  font-display: swap;
+}

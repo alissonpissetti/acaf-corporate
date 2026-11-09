@@ -93,12 +93,12 @@
 }
 
 .flash-message-info {
-  border-color: rgba(232, 136, 28, 0.25);
+  border-color: rgba(130, 84, 228, 0.25);
 }
 
 .flash-message-info .flash-message-icon {
-  background: var(--orange-soft);
-  color: var(--orange-dark);
+  background: var(--accent-soft);
+  color: var(--accent-strong);
 }
 
 @media (max-width: 640px) {

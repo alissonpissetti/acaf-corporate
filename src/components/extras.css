@@ -50,8 +50,6 @@
   font-size: 0.75rem;
   font-weight: 600;
   color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
 }
 
 .unit-photo-preview {
@@ -112,8 +110,8 @@
 }
 
 .unit-photo-gallery-item.is-cover {
-  border-color: var(--orange);
-  box-shadow: 0 0 0 1px var(--orange);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
 }
 
 .unit-photo-gallery-select {
@@ -144,8 +142,6 @@
   color: #fff;
   font-size: 0.625rem;
   font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
   pointer-events: none;
 }
 
@@ -180,16 +176,14 @@
 }
 
 .unit-photo-gallery-add:hover:not(:disabled) {
-  border-color: var(--orange);
-  color: var(--orange-dark);
+  border-color: var(--accent);
+  color: var(--accent-strong);
 }
 
 .unit-switch-label {
   font-size: 0.6875rem;
   color: var(--text-muted);
   font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
   margin-top: 8px;
 }
 

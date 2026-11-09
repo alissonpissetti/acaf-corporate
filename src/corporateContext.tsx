@@ -10,11 +10,15 @@ import {
 import {
   clearCorporateSession,
   corporateLogin,
+  corporateLoginWithOtp,
   corporateMe,
+  corporateRequestOtp,
+  corporateResetPasswordWithOtp,
   getCorporateToken,
   setCorporateSession,
   type CompanyDto,
   type CorporateSessionUser,
+  type OtpPurpose,
 } from './api/auth';
 import { apiHealth } from './api/client';
 
@@ -26,6 +30,13 @@ type CorporateContextValue = {
   user: CorporateSessionUser | null;
   company: CompanyDto | null;
   login: (login: string, password: string) => Promise<void>;
+  loginWithOtp: (mobilePhone: string, code: string) => Promise<void>;
+  requestOtp: (mobilePhone: string, purpose: OtpPurpose) => Promise<{ ok: boolean; message?: string }>;
+  resetPasswordWithOtp: (
+    mobilePhone: string,
+    code: string,
+    newPassword: string,
+  ) => Promise<{ ok: boolean; message?: string }>;
   logout: () => void;
   refresh: () => Promise<void>;
 };
@@ -89,6 +100,26 @@ export function CorporateProvider({ children }: { children: ReactNode }) {
     [refresh],
   );
 
+  const loginWithOtp = useCallback(
+    async (mobilePhone: string, code: string) => {
+      const result = await corporateLoginWithOtp(mobilePhone, code);
+      setCorporateSession(result.accessToken, result.user, result.company);
+      await refresh();
+    },
+    [refresh],
+  );
+
+  const requestOtp = useCallback(
+    (mobilePhone: string, purpose: OtpPurpose) => corporateRequestOtp(mobilePhone, purpose),
+    [],
+  );
+
+  const resetPasswordWithOtp = useCallback(
+    (mobilePhone: string, code: string, newPassword: string) =>
+      corporateResetPasswordWithOtp(mobilePhone, code, newPassword),
+    [],
+  );
+
   const logout = useCallback(() => {
     clearCorporateSession();
     setLoggedIn(false);
@@ -106,10 +137,26 @@ export function CorporateProvider({ children }: { children: ReactNode }) {
       user,
       company,
       login,
+      loginWithOtp,
+      requestOtp,
+      resetPasswordWithOtp,
       logout,
       refresh,
     }),
-    [loggedIn, loading, apiOnline, error, user, company, login, logout, refresh],
+    [
+      loggedIn,
+      loading,
+      apiOnline,
+      error,
+      user,
+      company,
+      login,
+      loginWithOtp,
+      requestOtp,
+      resetPasswordWithOtp,
+      logout,
+      refresh,
+    ],
   );
 
   return <CorporateContext.Provider value={value}>{children}</CorporateContext.Provider>;

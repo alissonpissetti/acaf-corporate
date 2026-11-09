@@ -27,20 +27,31 @@ export const emptySignupDraft = (): SignupDraft => ({
 });
 
 export function loadSignupDraft(): SignupDraft {
-  const raw = localStorage.getItem(SIGNUP_DRAFT_KEY);
-  if (!raw) return emptySignupDraft();
   try {
+    const raw = localStorage.getItem(SIGNUP_DRAFT_KEY);
+    if (!raw) return emptySignupDraft();
     const parsed = JSON.parse(raw) as Partial<SignupDraft>;
-    return { ...emptySignupDraft(), ...parsed };
+    // A senha nunca é restaurada do rascunho.
+    return { ...emptySignupDraft(), ...parsed, password: '' };
   } catch {
     return emptySignupDraft();
   }
 }
 
+/** Salva o rascunho sem a senha (nunca guardar credenciais no navegador). */
 export function saveSignupDraft(draft: SignupDraft): void {
-  localStorage.setItem(SIGNUP_DRAFT_KEY, JSON.stringify(draft));
+  try {
+    const { password: _omit, ...rest } = draft;
+    localStorage.setItem(SIGNUP_DRAFT_KEY, JSON.stringify(rest));
+  } catch {
+    /* armazenamento indisponível: segue sem rascunho */
+  }
 }
 
 export function clearSignupDraft(): void {
-  localStorage.removeItem(SIGNUP_DRAFT_KEY);
+  try {
+    localStorage.removeItem(SIGNUP_DRAFT_KEY);
+  } catch {
+    /* ignore */
+  }
 }
