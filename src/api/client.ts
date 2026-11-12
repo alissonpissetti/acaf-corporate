@@ -236,18 +236,51 @@ export function patchEmployee(id: string, status: 'active' | 'inactive'): Promis
   });
 }
 
+export function removeEmployee(id: string): Promise<{ ok: true }> {
+  return corporateFetch(`/api/corporate/employees/${encodeURIComponent(id)}`, {
+    method: 'DELETE',
+  });
+}
+
 export function resendInvite(id: string): Promise<EmployeeDto> {
   return corporateFetch(`/api/corporate/employees/${id}/resend-invite`, {
     method: 'POST',
   });
 }
 
-export function getEnrollmentCode(): Promise<{ enrollmentCode: string }> {
+export type OnboardingShare = {
+  enrollmentCode: string;
+  webOnboardingUrl: string | null;
+  appDownloadUrl: string | null;
+  shareText: string;
+};
+
+/** URL pública com passo a passo (usa CORPORATE_APP_URL na API ou a origem atual no dev). */
+export function resolveWebOnboardingUrl(share: OnboardingShare): string {
+  if (share.webOnboardingUrl?.trim()) return share.webOnboardingUrl.trim();
+  const url = new URL(`${window.location.origin}/ativar`);
+  url.searchParams.set('code', share.enrollmentCode);
+  return url.toString();
+}
+
+/** Texto completo para colar no WhatsApp, e-mail etc. */
+export function onboardingClipboardText(share: OnboardingShare): string {
+  const web = resolveWebOnboardingUrl(share);
+  if (share.shareText.includes('Instruções no link:')) return share.shareText;
+  return `${share.shareText}\n\nInstruções no link: ${web}`;
+}
+
+export function getEnrollmentCode(): Promise<OnboardingShare> {
   return corporateFetch('/api/corporate/enrollment-code');
 }
 
-export function getEmployeeEnrollmentCode(id: string): Promise<{ enrollmentCode: string }> {
+export function getEmployeeOnboardingShare(id: string): Promise<OnboardingShare> {
   return corporateFetch(`/api/corporate/employees/${id}/invite-link`);
+}
+
+/** @deprecated use getEmployeeOnboardingShare */
+export function getEmployeeEnrollmentCode(id: string): Promise<OnboardingShare> {
+  return getEmployeeOnboardingShare(id);
 }
 
 export function sendEmployeeInviteEmail(id: string): Promise<EmployeeDto> {

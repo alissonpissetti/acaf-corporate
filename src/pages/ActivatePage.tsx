@@ -2,16 +2,40 @@ import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { getInvitePreview } from '../api/client';
 
+function ActivateWithCode({ code }: { code: string }) {
+  return (
+    <>
+      <p className="login-panel-lead">
+        O benefício é ativado no <strong>app mobile</strong>, não neste portal.
+      </p>
+      <div className="enrollment-code-inline">
+        <span>Código de adesão</span>
+        <code>{code}</code>
+      </div>
+      <ol className="activate-steps">
+        <li>Baixe o aplicativo Movly (loja do seu celular).</li>
+        <li>Abra <strong>Minha conta</strong>.</li>
+        <li>Informe o código acima e escolha seu plano.</li>
+        <li>Finalize o cadastro.</li>
+      </ol>
+      <Link to="/login" className="btn btn-primary login-submit">
+        Ir ao portal do RH
+      </Link>
+    </>
+  );
+}
+
 export function ActivatePage() {
   const [params] = useSearchParams();
+  const codeFromUrl = params.get('code')?.trim() ?? '';
   const token = params.get('token')?.trim() ?? '';
   const [companyName, setCompanyName] = useState<string | null>(null);
-  const [enrollmentCode, setEnrollmentCode] = useState<string | null>(null);
-  const [loading, setLoading] = useState(Boolean(token));
+  const [enrollmentCode, setEnrollmentCode] = useState<string | null>(codeFromUrl || null);
+  const [loading, setLoading] = useState(Boolean(token) && !codeFromUrl);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!token) return;
+    if (!token || codeFromUrl) return;
 
     void (async () => {
       try {
@@ -28,7 +52,9 @@ export function ActivatePage() {
         setLoading(false);
       }
     })();
-  }, [token]);
+  }, [token, codeFromUrl]);
+
+  const displayCode = enrollmentCode || codeFromUrl;
 
   return (
     <div className="login-shell">
@@ -39,30 +65,24 @@ export function ActivatePage() {
             <p className="login-loading-text">Validando…</p>
           ) : (
             <>
-              <p className="login-panel-lead">
-                O benefício é ativado no <strong>app mobile</strong>, não neste portal.
-              </p>
               {companyName && (
                 <p className="activate-company-name">
                   Empresa: <strong>{companyName}</strong>
                 </p>
               )}
-              {enrollmentCode && (
-                <div className="enrollment-code-inline">
-                  <span>Código de adesão</span>
-                  <code>{enrollmentCode}</code>
-                </div>
+              {displayCode ? (
+                <ActivateWithCode code={displayCode} />
+              ) : (
+                <p className="login-panel-lead">
+                  Informe o <strong>código de adesão</strong> que o RH compartilhou ou abra o link completo do convite.
+                </p>
               )}
-              <ol className="activate-steps">
-                <li>Abra o aplicativo.</li>
-                <li>Vá em <strong>Minha conta</strong>.</li>
-                <li>Informe o código de adesão da sua empresa.</li>
-                <li>Escolha o plano e finalize o cadastro.</li>
-              </ol>
               {error && <p className="login-form-error">{error}</p>}
-              <Link to="/login" className="btn btn-primary login-submit">
-                Ir ao portal do RH
-              </Link>
+              {!displayCode ? (
+                <Link to="/login" className="btn btn-primary login-submit">
+                  Ir ao portal do RH
+                </Link>
+              ) : null}
             </>
           )}
         </div>

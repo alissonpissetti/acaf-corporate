@@ -6,12 +6,14 @@ import {
   employeeBillingShortLabel,
   employeeStatusLabel,
   formatMonthKey,
-  getEmployeeEnrollmentCode,
+  getEmployeeOnboardingShare,
   getEmployeesUsageReport,
   getEmployeeUsage,
   getEnrollmentCode,
+  resolveWebOnboardingUrl,
   listEmployees,
   patchEmployee,
+  removeEmployee,
   sendEmployeeInviteEmail,
   sendEmployeeInviteSms,
   type EmployeeDto,
@@ -28,12 +30,17 @@ import {
 } from '../utils/employeeBulkImport';
 import { formatCpfInput, formatPhoneInput } from '../utils/personInput';
 import type { EmployeesBulkImportResult } from '../api/client';
+import { EnrollmentCodeBar } from '../components/EnrollmentCodeBar';
+import { EmployeeRowActions } from '../components/EmployeeRowActions';
+import {
+  canCancelInvite,
+  canSendInvite,
+  cancelInviteLabel,
+} from '../utils/employeeActions';
 import './DashboardPage.css';
 import '../components/EmployeeModal.css';
 
-function canSendInvite(emp: EmployeeDto): boolean {
-  return emp.status === 'pending' || emp.status === 'invited';
-}
+type EmployeesPageTab = 'manage' | 'usage';
 
 function currentMonthKey(): string {
   const d = new Date();
@@ -63,17 +70,22 @@ export function EmployeesPage() {
   const [email, setEmail] = useState('');
   const [cpf, setCpf] = useState('');
   const [mobilePhone, setMobilePhone] = useState('');
+  const [inviteByEmailOnCreate, setInviteByEmailOnCreate] = useState(true);
+  const [inviteBySmsOnCreate, setInviteBySmsOnCreate] = useState(false);
   const [busy, setBusy] = useState(false);
   const [actionBusyId, setActionBusyId] = useState<string | null>(null);
   const [profileOpen, setProfileOpen] = useState(false);
   const [profileLoading, setProfileLoading] = useState(false);
   const [profileError, setProfileError] = useState<string | null>(null);
   const [profileData, setProfileData] = useState<EmployeeUsageResponse | null>(null);
+  const [removeTarget, setRemoveTarget] = useState<EmployeeDto | null>(null);
+  const [removeBusy, setRemoveBusy] = useState(false);
 
   const [reportMonth, setReportMonth] = useState(currentMonthKey);
   const [reportData, setReportData] = useState<EmployeesUsageReport | null>(null);
   const [reportLoading, setReportLoading] = useState(false);
   const [reportError, setReportError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<EmployeesPageTab>('manage');
 
   const load = useCallback(async () => {
     try {
@@ -106,8 +118,9 @@ export function EmployeesPage() {
   }, []);
 
   useEffect(() => {
+    if (activeTab !== 'usage') return;
     void loadReport(reportMonth);
-  }, [reportMonth, loadReport]);
+  }, [reportMonth, loadReport, activeTab]);
 
   useEffect(() => {
     if (company?.enrollmentCode) {
@@ -137,10 +150,14 @@ export function EmployeesPage() {
   }, [company?.enrollmentCode, company?.status]);
 
   useEffect(() => {
-    if (!modalOpen && !bulkModalOpen && !profileOpen) return;
+    if (!modalOpen && !bulkModalOpen && !profileOpen && !removeTarget) return;
 
     const onKeyDown = (ev: KeyboardEvent) => {
       if (ev.key !== 'Escape') return;
+      if (removeTarget && !removeBusy) {
+        setRemoveTarget(null);
+        return;
+      }
       if (profileOpen && !profileLoading) {
         setProfileOpen(false);
         return;
@@ -158,7 +175,7 @@ export function EmployeesPage() {
       document.body.style.overflow = '';
       window.removeEventListener('keydown', onKeyDown);
     };
-  }, [modalOpen, bulkModalOpen, profileOpen, busy, bulkBusy, profileLoading]);
+  }, [modalOpen, bulkModalOpen, profileOpen, busy, bulkBusy, profileLoading, removeTarget, removeBusy]);
 
   const downloadBulkTemplate = () => {
     const csv = '\uFEFF' + employeesImportCsvTemplate();
@@ -276,27 +293,123 @@ export function EmployeesPage() {
     }
   };
 
+  const onCopyCompanyInviteLink = async () => {
+    setActionBusyId('company-link');
+    try {
+      const share = await getEnrollmentCode();
+      await copyTextToClipboard(resolveWebOnboardingUrl(share));
+      flash.success('Link de convite copiado.');
+    } catch (e) {
+      flash.error(e instanceof Error ? e.message : 'Erro ao copiar link.');
+    } finally {
+      setActionBusyId(null);
+    }
+  };
+
+  const onCopyInviteLink = async (emp: EmployeeDto) => {
+    setActionBusyId(emp.id);
+    try {
+      const share = await getEmployeeOnboardingShare(emp.id);
+      await copyTextToClipboard(resolveWebOnboardingUrl(share));
+      flash.success('Link de convite copiado.');
+    } catch (e) {
+      flash.error(e instanceof Error ? e.message : 'Erro ao copiar link.');
+    } finally {
+      setActionBusyId(null);
+    }
+  };
+
+  const resetCreateEmployeeForm = () => {
+    setName('');
+    setEmail('');
+    setCpf('');
+    setMobilePhone('');
+    setInviteByEmailOnCreate(true);
+    setInviteBySmsOnCreate(false);
+  };
+
   const onAdd = async (ev: React.FormEvent) => {
     ev.preventDefault();
     setBusy(true);
     try {
-      await addEmployee({
+      const created = await addEmployee({
         name,
         email,
         cpf: cpf || undefined,
         mobilePhone,
       });
-      flash.success('Colaborador cadastrado. Envie o código de adesão quando quiser.');
+
+      const successParts = ['Colaborador cadastrado.'];
+      const inviteErrors: string[] = [];
+
+      if (inviteByEmailOnCreate) {
+        try {
+          await sendEmployeeInviteEmail(created.id);
+          successParts.push('Convite com código de adesão enviado por e-mail.');
+        } catch (e) {
+          inviteErrors.push(e instanceof Error ? e.message : 'Não foi possível enviar o e-mail.');
+        }
+      }
+
+      if (inviteBySmsOnCreate) {
+        try {
+          await sendEmployeeInviteSms(created.id);
+          successParts.push('Convite enviado por SMS.');
+        } catch (e) {
+          inviteErrors.push(e instanceof Error ? e.message : 'Não foi possível enviar o SMS.');
+        }
+      }
+
+      if (!inviteByEmailOnCreate && !inviteBySmsOnCreate) {
+        successParts.push('Envie o código de adesão quando quiser (perfil do colaborador).');
+      }
+
+      flash.success(successParts.join(' '));
+      if (inviteErrors.length) {
+        flash.error(inviteErrors.join(' '));
+      }
+
       setModalOpen(false);
-      setName('');
-      setEmail('');
-      setCpf('');
-      setMobilePhone('');
+      resetCreateEmployeeForm();
       await load();
     } catch (e) {
       flash.error(e instanceof Error ? e.message : 'Erro ao cadastrar.');
     } finally {
       setBusy(false);
+    }
+  };
+
+  const askCancelInvite = (emp: EmployeeDto) => {
+    if (!canCancelInvite(emp)) return;
+    setRemoveTarget(emp);
+  };
+
+  const closeRemoveConfirm = () => {
+    if (removeBusy) return;
+    setRemoveTarget(null);
+  };
+
+  const confirmCancelInvite = async () => {
+    if (!removeTarget) return;
+    setRemoveBusy(true);
+    try {
+      await removeEmployee(removeTarget.id);
+      flash.success(
+        removeTarget.status === 'invited'
+          ? 'Convite cancelado. A pessoa saiu da lista.'
+          : 'Cadastro removido da lista.',
+      );
+      if (profileData?.employee.id === removeTarget.id) {
+        setProfileOpen(false);
+        setProfileData(null);
+        setProfileError(null);
+      }
+      setRemoveTarget(null);
+      await load();
+    } catch (e) {
+      flash.error(e instanceof Error ? e.message : 'Não foi possível remover.');
+    } finally {
+      setRemoveBusy(false);
     }
   };
 
@@ -337,9 +450,8 @@ export function EmployeesPage() {
   const onCopyCode = async (emp: EmployeeDto) => {
     setActionBusyId(emp.id);
     try {
-      const code =
-        enrollmentCode ??
-        (await getEmployeeEnrollmentCode(emp.id)).enrollmentCode;
+      const share = await getEmployeeOnboardingShare(emp.id);
+      const code = enrollmentCode ?? share.enrollmentCode;
       await copyTextToClipboard(code);
       flash.success('Código de adesão copiado.');
     } catch (e) {
@@ -446,78 +558,152 @@ export function EmployeesPage() {
 
   return (
     <div className="page-stack">
-      <header className="page-header page-header-row">
-        <div>
-          <h1>Colaboradores</h1>
-          <p className="page-lead">
-            Cadastre colaboradores e compartilhe o código de adesão para cadastro no app.
-          </p>
-        </div>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, justifyContent: 'flex-end' }}>
-          <button type="button" className="btn btn-secondary" onClick={() => openBulkModal()}>
-            Importar lista
-          </button>
-          <button type="button" className="btn btn-primary" onClick={() => setModalOpen(true)}>
-            Adicionar colaborador
-          </button>
-        </div>
+      <header className="page-header">
+        <h1>Colaboradores</h1>
+        <p className="page-lead">
+          Cadastro, convites e acompanhamento de uso no app — o código da empresa vale para todas as abas.
+        </p>
       </header>
 
-      {company?.status === 'active' ? (
-        <section className="panel enrollment-code-panel">
-          <div className="panel-body">
-            {codeLoading ? (
-              <p className="enrollment-code-lead">Carregando código de adesão…</p>
-            ) : enrollmentCode ? (
-              <div className="enrollment-code-row">
-                <div>
-                  <h2 className="enrollment-code-title">Código de adesão da empresa</h2>
-                  <p className="enrollment-code-lead">
-                    O colaborador abre o aplicativo, vai em <strong>Minha conta</strong> e
-                    informa este código para vincular a empresa e escolher o plano.
-                  </p>
-                </div>
-                <div className="enrollment-code-value-wrap">
-                  <code className="enrollment-code-value">{enrollmentCode}</code>
-                  <button
-                    type="button"
-                    className="btn btn-secondary btn-sm"
-                    disabled={actionBusyId === 'company-code'}
-                    onClick={() => void onCopyCompanyCode()}
-                  >
-                    Copiar código
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <p className="enrollment-code-lead page-error">
-                {codeError ?? 'Não foi possível carregar o código. Tente sair e entrar novamente.'}
-              </p>
-            )}
-          </div>
-        </section>
-      ) : (
-        <section className="panel">
-          <div className="panel-body">
-            <p className="enrollment-code-lead">
-              Sua empresa está com status <strong>{company?.status ?? 'pendente'}</strong>. O código
-              de adesão aparece após aprovação no <strong>Painel Admin</strong> (menu Corporativo →
-              Empresas → Aprovar empresa).
-            </p>
-          </div>
-        </section>
-      )}
+      <EnrollmentCodeBar
+        companyStatus={company?.status}
+        codeLoading={codeLoading}
+        enrollmentCode={enrollmentCode}
+        codeError={codeError}
+        copyBusy={actionBusyId === 'company-code'}
+        copyLinkBusy={actionBusyId === 'company-link'}
+        onCopy={() => void onCopyCompanyCode()}
+        onCopyLink={() => void onCopyCompanyInviteLink()}
+      />
 
-      <section className="panel">
-        <div className="panel-body">
-          <div className="page-header-row" style={{ marginBottom: 16, alignItems: 'flex-end' }}>
+      <div className="employees-page-tabs" role="tablist" aria-label="Seções de colaboradores">
+        <button
+          type="button"
+          role="tab"
+          id="employees-tab-manage"
+          aria-selected={activeTab === 'manage'}
+          aria-controls="employees-panel-manage"
+          className={`employees-page-tab${activeTab === 'manage' ? ' is-active' : ''}`}
+          onClick={() => setActiveTab('manage')}
+        >
+          Cadastro e gerenciamento
+        </button>
+        <button
+          type="button"
+          role="tab"
+          id="employees-tab-usage"
+          aria-selected={activeTab === 'usage'}
+          aria-controls="employees-panel-usage"
+          className={`employees-page-tab${activeTab === 'usage' ? ' is-active' : ''}`}
+          onClick={() => setActiveTab('usage')}
+        >
+          Relatório de uso
+        </button>
+      </div>
+
+      {activeTab === 'manage' ? (
+        <div
+          id="employees-panel-manage"
+          role="tabpanel"
+          aria-labelledby="employees-tab-manage"
+          className="employees-page-tabpanel"
+        >
+          <div className="employees-tab-toolbar">
             <div>
-              <h2 className="enrollment-code-title" style={{ marginBottom: 4 }}>
-                Relatório de uso (mensal)
-              </h2>
-              <p className="enrollment-code-lead" style={{ marginBottom: 0 }}>
-                Check-ins de assinantes e diárias por colaborador no mês civil, e visão agregada por plano. Os números são{' '}
-                <strong>dias distintos com registro</strong> no app para o mês selecionado.
+              <h2>Lista de colaboradores</h2>
+              <p>Convide pelo e-mail, acompanhe status e abra o perfil de cada pessoa.</p>
+            </div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+              {company?.status === 'active' && enrollmentCode ? (
+                <button
+                  type="button"
+                  className="btn btn-ghost btn-sm"
+                  disabled={actionBusyId === 'company-link'}
+                  title="Link público com instruções para cadastro no app"
+                  onClick={() => void onCopyCompanyInviteLink()}
+                >
+                  Copiar link de convite
+                </button>
+              ) : null}
+              <button type="button" className="btn btn-secondary" onClick={() => openBulkModal()}>
+                Importar lista
+              </button>
+              <button type="button" className="btn btn-primary" onClick={() => setModalOpen(true)}>
+                Adicionar colaborador
+              </button>
+            </div>
+          </div>
+
+          {error ? <p className="page-error">{error}</p> : null}
+
+          <section className="panel">
+            <div className="panel-body panel-body-flush">
+              {loading ? (
+                <p className="empty-state">Carregando…</p>
+              ) : employees.length === 0 ? (
+                <p className="empty-state">Nenhum colaborador cadastrado.</p>
+              ) : (
+                <div className="table-wrap employees-table-responsive table-wrap-responsive">
+                  <table className="data-table employees-table">
+                    <thead>
+                      <tr>
+                        <th>Nome</th>
+                        <th>E-mail</th>
+                        <th>Celular</th>
+                        <th>Status</th>
+                        <th>Ações</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {employees.map((emp) => {
+                        const actionBusy = actionBusyId === emp.id;
+                        return (
+                          <tr key={emp.id}>
+                            <td data-label="Nome">{emp.name}</td>
+                            <td data-label="E-mail" className="data-table-mobile-span-full employees-table-email">
+                              {emp.email}
+                            </td>
+                            <td data-label="Celular" className="employees-table-phone">
+                              {emp.mobilePhone ?? '—'}
+                            </td>
+                            <td data-label="Status">
+                              <span className={statusBadgeClass(emp.status)}>
+                                {employeeStatusLabel(emp.status)}
+                              </span>
+                            </td>
+                            <td className="table-actions table-actions--employees employee-actions-cell">
+                              <EmployeeRowActions
+                                emp={emp}
+                                disabled={actionBusy || removeBusy}
+                                onProfile={() => void openProfile(emp)}
+                                onCopyInviteLink={() => void onCopyInviteLink(emp)}
+                                onToggleStatus={() => void toggleStatus(emp)}
+                                onCancelOrRemove={() => askCancelInvite(emp)}
+                              />
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </section>
+        </div>
+      ) : (
+        <div
+          id="employees-panel-usage"
+          role="tabpanel"
+          aria-labelledby="employees-tab-usage"
+          className="employees-page-tabpanel"
+        >
+          <div className="employees-tab-toolbar">
+            <div>
+              <h2>Relatório de uso (mensal)</h2>
+              <p>
+                Check-ins de assinantes e diárias por colaborador; contagem por{' '}
+                <strong>dias distintos com registro</strong> no mês selecionado.
               </p>
             </div>
             <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
@@ -543,40 +729,82 @@ export function EmployeesPage() {
             </div>
           </div>
 
-          {reportError ? <p className="page-error">{reportError}</p> : null}
-          {reportLoading ? (
-            <p className="empty-state">Carregando relatório…</p>
-          ) : reportData ? (
-            <>
-              <p className="muted" style={{ marginBottom: 16, fontSize: '0.9rem' }}>
-                <strong>{formatMonthKey(reportData.monthKey)}</strong>
-                {' · '}
-                {reportData.totals.employees} colaborador(es) · soma dos dias-distintos com check-in de plano (todos):{' '}
-                <strong>{reportData.totals.memberCheckInDaysInMonth}</strong>
-                {' · '}
-                soma dos dias-distintos diárias (todos): <strong>{reportData.totals.dailyPassVisitDaysInMonth}</strong>
-              </p>
-
-              {reportData.byPlan.length > 0 ? (
+          <section className="panel">
+            <div className="panel-body">
+              {reportError ? <p className="page-error">{reportError}</p> : null}
+              {reportLoading ? (
+                <p className="empty-state">Carregando relatório…</p>
+              ) : reportData ? (
                 <>
-                  <h3 className="emp-profile-section-title">Uso por plano (colaboradores da empresa)</h3>
-                  <div className="table-wrap" style={{ marginBottom: 24 }}>
+                  <p className="muted" style={{ marginBottom: 16, fontSize: '0.9rem' }}>
+                    <strong>{formatMonthKey(reportData.monthKey)}</strong>
+                    {' · '}
+                    {reportData.totals.employees} colaborador(es) · soma dos dias-distintos com
+                    check-in de plano (todos):{' '}
+                    <strong>{reportData.totals.memberCheckInDaysInMonth}</strong>
+                    {' · '}
+                    soma dos dias-distintos diárias (todos):{' '}
+                    <strong>{reportData.totals.dailyPassVisitDaysInMonth}</strong>
+                  </p>
+
+                  {reportData.byPlan.length > 0 ? (
+                    <>
+                      <h3 className="emp-profile-section-title">
+                        Uso por plano (colaboradores da empresa)
+                      </h3>
+                      <div className="table-wrap" style={{ marginBottom: 24 }}>
+                        <table className="data-table">
+                          <thead>
+                            <tr>
+                              <th>Plano</th>
+                              <th>Colaboradores</th>
+                              <th>Soma dias-distintos (check-in plano)</th>
+                              <th>Soma dias-distintos diárias</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {reportData.byPlan.map((p) => (
+                              <tr key={p.subscriptionPlanId ?? 'none'}>
+                                <td>{p.subscriptionPlanName}</td>
+                                <td>{p.employeeCount}</td>
+                                <td>{p.sumMemberCheckInDays}</td>
+                                <td>{p.sumDailyPassVisitDays}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </>
+                  ) : null}
+
+                  <h3 className="emp-profile-section-title">Por colaborador</h3>
+                  <div className="table-wrap">
                     <table className="data-table">
                       <thead>
                         <tr>
+                          <th>Nome</th>
+                          <th>E-mail</th>
+                          <th>Status</th>
+                          <th>Dias (check-in plano)</th>
+                          <th>Dias diárias</th>
                           <th>Plano</th>
-                          <th>Colaboradores</th>
-                          <th>Soma dias-distintos (check-in plano)</th>
-                          <th>Soma dias-distintos diárias</th>
+                          <th>Perfil app</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {reportData.byPlan.map((p) => (
-                          <tr key={p.subscriptionPlanId ?? 'none'}>
-                            <td>{p.subscriptionPlanName}</td>
-                            <td>{p.employeeCount}</td>
-                            <td>{p.sumMemberCheckInDays}</td>
-                            <td>{p.sumDailyPassVisitDays}</td>
+                        {reportData.rows.map((r) => (
+                          <tr key={r.employeeId}>
+                            <td>{r.name}</td>
+                            <td>{r.email}</td>
+                            <td>
+                              <span className={statusBadgeClass(r.status)}>
+                                {employeeStatusLabel(r.status)}
+                              </span>
+                            </td>
+                            <td>{r.memberCheckInDaysInMonth}</td>
+                            <td>{r.dailyPassVisitDaysInMonth}</td>
+                            <td>{r.subscriptionPlanName ?? '—'}</td>
+                            <td>{relationshipLabel(r.relationship)}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -584,107 +812,66 @@ export function EmployeesPage() {
                   </div>
                 </>
               ) : null}
-
-              <h3 className="emp-profile-section-title">Por colaborador</h3>
-              <div className="table-wrap">
-                <table className="data-table">
-                  <thead>
-                    <tr>
-                      <th>Nome</th>
-                      <th>E-mail</th>
-                      <th>Status</th>
-                      <th>Dias (check-in plano)</th>
-                      <th>Dias diárias</th>
-                      <th>Plano</th>
-                      <th>Perfil app</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {reportData.rows.map((r) => (
-                      <tr key={r.employeeId}>
-                        <td>{r.name}</td>
-                        <td>{r.email}</td>
-                        <td>
-                          <span className={statusBadgeClass(r.status)}>
-                            {employeeStatusLabel(r.status)}
-                          </span>
-                        </td>
-                        <td>{r.memberCheckInDaysInMonth}</td>
-                        <td>{r.dailyPassVisitDaysInMonth}</td>
-                        <td>{r.subscriptionPlanName ?? '—'}</td>
-                        <td>{relationshipLabel(r.relationship)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </>
-          ) : null}
-        </div>
-      </section>
-
-      {error && <p className="page-error">{error}</p>}
-
-      <section className="panel">
-        <div className="panel-body panel-body-flush">
-          {loading ? (
-            <p className="empty-state">Carregando…</p>
-          ) : employees.length === 0 ? (
-            <p className="empty-state">Nenhum colaborador cadastrado.</p>
-          ) : (
-            <div className="table-wrap">
-              <table className="data-table">
-                <thead>
-                  <tr>
-                    <th>Nome</th>
-                    <th>E-mail</th>
-                    <th>Celular</th>
-                    <th>Status</th>
-                    <th>Ações</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {employees.map((emp) => {
-                    const actionBusy = actionBusyId === emp.id;
-                    return (
-                      <tr key={emp.id}>
-                        <td>{emp.name}</td>
-                        <td>{emp.email}</td>
-                        <td>{emp.mobilePhone ?? '—'}</td>
-                        <td>
-                          <span className={statusBadgeClass(emp.status)}>
-                            {employeeStatusLabel(emp.status)}
-                          </span>
-                        </td>
-                        <td className="table-actions">
-                          <button
-                            type="button"
-                            className="btn btn-ghost btn-sm"
-                            disabled={actionBusy}
-                            onClick={() => void openProfile(emp)}
-                          >
-                            Perfil
-                          </button>
-                          {(emp.status === 'active' || emp.status === 'inactive') && (
-                            <button
-                              type="button"
-                              className="btn btn-ghost btn-sm"
-                              disabled={actionBusy}
-                              onClick={() => void toggleStatus(emp)}
-                            >
-                              {emp.status === 'active' ? 'Inativar' : 'Reativar'}
-                            </button>
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
             </div>
-          )}
+          </section>
         </div>
-      </section>
+      )}
+
+      {removeTarget ? (
+        <div
+          className="modal-backdrop employee-confirm-backdrop"
+          role="presentation"
+          onClick={() => closeRemoveConfirm()}
+        >
+          <div
+            className="employee-modal employee-modal--confirm"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="emp-remove-title"
+            onClick={(ev) => ev.stopPropagation()}
+          >
+            <header className="employee-modal-header">
+              <div className="employee-modal-header-text">
+                <h2 id="emp-remove-title" className="employee-modal-title">
+                  {removeTarget.status === 'invited' ? 'Cancelar convite' : 'Remover cadastro'}
+                </h2>
+                <p className="employee-modal-lead">
+                  {removeTarget.status === 'invited'
+                    ? `${removeTarget.name} sai da lista e o convite deixa de valer para este cadastro. Você pode adicionar de novo depois.`
+                    : `${removeTarget.name} sai da lista de colaboradores. Você pode cadastrar de novo depois.`}
+                </p>
+              </div>
+              <button
+                type="button"
+                className="employee-modal-close"
+                aria-label="Fechar"
+                disabled={removeBusy}
+                onClick={() => closeRemoveConfirm()}
+              >
+                ×
+              </button>
+            </header>
+            <footer className="employee-modal-footer">
+              <button
+                type="button"
+                className="btn btn-secondary"
+                disabled={removeBusy}
+                onClick={() => closeRemoveConfirm()}
+              >
+                Voltar
+              </button>
+              <button
+                type="button"
+                className="btn btn-danger"
+                disabled={removeBusy}
+                onClick={() => void confirmCancelInvite()}
+              >
+                {removeBusy ? 'Removendo…' : cancelInviteLabel(removeTarget)}
+              </button>
+            </footer>
+          </div>
+        </div>
+      ) : null}
 
       {profileOpen && (
         <div className="modal-backdrop" role="presentation" onClick={() => void closeProfile()}>
@@ -742,7 +929,7 @@ export function EmployeesPage() {
                         Envia o mesmo código da empresa (visível acima na tela) para o colaborador cadastrar no app em{' '}
                         <strong>Minha conta</strong>, ou copie para enviar por outro canal.
                       </p>
-                      <div className="emp-profile-invite-actions">
+                      <div className="emp-profile-invite-actions employee-action-toolbar">
                         <button
                           type="button"
                           className="btn btn-secondary btn-sm"
@@ -761,6 +948,15 @@ export function EmployeesPage() {
                         </button>
                         <button
                           type="button"
+                          className="btn btn-ghost btn-sm"
+                          disabled={actionBusyId === profileData.employee.id}
+                          title="Link com passo a passo para o app"
+                          onClick={() => void onCopyInviteLink(profileData.employee)}
+                        >
+                          Copiar link de convite
+                        </button>
+                        <button
+                          type="button"
                           className="btn btn-secondary btn-sm"
                           disabled={
                             actionBusyId === profileData.employee.id || !profileData.employee.mobilePhone
@@ -773,6 +969,14 @@ export function EmployeesPage() {
                           onClick={() => void onSendSms(profileData.employee)}
                         >
                           Enviar por SMS
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn-ghost btn-sm danger"
+                          disabled={actionBusyId === profileData.employee.id || removeBusy}
+                          onClick={() => askCancelInvite(profileData.employee)}
+                        >
+                          {cancelInviteLabel(profileData.employee)}
                         </button>
                       </div>
                     </div>
@@ -1001,8 +1205,8 @@ export function EmployeesPage() {
                   Novo colaborador
                 </h2>
                 <p className="employee-modal-lead">
-                  Cadastre os dados de contato. Depois compartilhe o código de adesão da empresa
-                  por e-mail, celular ou copiando manualmente.
+                  Cadastre os dados de contato e, se quiser, dispare o convite com o código de
+                  adesão para o colaborador baixar o app e ativar em Minha conta.
                 </p>
               </div>
               <button
@@ -1076,9 +1280,35 @@ export function EmployeesPage() {
                   </div>
                 </div>
 
+                <fieldset className="employee-modal-invite-options" disabled={busy}>
+                  <legend className="employee-modal-invite-options__legend">Enviar convite agora</legend>
+                  <label className="employee-modal-invite-option">
+                    <input
+                      type="checkbox"
+                      checked={inviteByEmailOnCreate}
+                      onChange={(ev) => setInviteByEmailOnCreate(ev.target.checked)}
+                    />
+                    <span>
+                      Convite por e-mail (layout Movly + código)
+                      <small>Enviado para o endereço informado acima</small>
+                    </span>
+                  </label>
+                  <label className="employee-modal-invite-option">
+                    <input
+                      type="checkbox"
+                      checked={inviteBySmsOnCreate}
+                      onChange={(ev) => setInviteBySmsOnCreate(ev.target.checked)}
+                    />
+                    <span>
+                      SMS com código de adesão
+                      <small>Requer celular válido e SMS configurado na API</small>
+                    </span>
+                  </label>
+                </fieldset>
+
                 <p className="employee-modal-note">
-                  O cadastro no app é feito pelo colaborador com o <strong>código de adesão</strong>{' '}
-                  da empresa (Minha conta no aplicativo).
+                  O colaborador baixa o aplicativo, abre <strong>Minha conta</strong> e informa o{' '}
+                  <strong>código de adesão</strong> da empresa.
                 </p>
               </div>
 

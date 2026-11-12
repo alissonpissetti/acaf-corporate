@@ -30,6 +30,19 @@
   max-height: min(92vh, 820px);
 }
 
+.employee-confirm-backdrop {
+  z-index: 110;
+}
+
+.employee-modal--confirm {
+  max-width: 440px;
+  max-height: none;
+}
+
+.employee-modal--confirm .employee-modal-header {
+  padding-bottom: 8px;
+}
+
 .employee-modal--bulk {
   max-width: 640px;
   max-height: min(92vh, 780px);
@@ -304,6 +317,54 @@
 .employee-modal .field input:disabled {
   background: var(--surface-muted);
   color: var(--text-muted);
+}
+
+.employee-modal-invite-options {
+  margin: 0 0 14px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+}
+
+.employee-modal-invite-options__legend {
+  padding: 0 6px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+.employee-modal-invite-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 10px;
+  font-size: 0.875rem;
+  line-height: 1.35;
+  color: var(--foreground);
+  cursor: pointer;
+}
+
+.employee-modal-invite-option:first-of-type {
+  margin-top: 4px;
+}
+
+.employee-modal-invite-option input {
+  margin-top: 3px;
+  flex-shrink: 0;
+  accent-color: var(--accent);
+}
+
+.employee-modal-invite-option span {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.employee-modal-invite-option small {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-weight: 400;
 }
 
 .employee-modal-note {

@@ -430,6 +430,22 @@ table.data-table tr:last-child td {
   background: #fef3f2;
 }
 
+.btn-danger {
+  background: #b42318;
+  color: #fff;
+  border: 1px solid #b42318;
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: #912018;
+  border-color: #912018;
+}
+
+.btn-danger:focus-visible {
+  outline: 2px solid #b42318;
+  outline-offset: 2px;
+}
+
 /* Linha de tabela clicável */
 table.data-table tbody tr {
   transition: background 0.12s ease;
