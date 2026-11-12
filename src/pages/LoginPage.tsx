@@ -98,22 +98,35 @@ export function LoginPage() {
     }
   };
 
-  const onRequestOtp = async (ev: React.FormEvent) => {
-    ev.preventDefault();
+  const otpPurpose = () => (mode === MODES.FORGOT ? 'password_reset' : 'login');
+
+  const sendOtp = async (advanceToValidateStep: boolean) => {
     resetMessages();
     if (!ensureApi()) return;
 
     setBusy(true);
     try {
-      const purpose = mode === MODES.FORGOT ? 'password_reset' : 'login';
-      const result = await requestOtp(mobilePhone, purpose);
+      const result = await requestOtp(mobilePhone, otpPurpose());
       setFormInfo(result.message ?? 'Código enviado para o celular.');
-      setStep(2);
+      if (advanceToValidateStep) setStep(2);
     } catch (e) {
       setFormError(e instanceof Error ? e.message : 'Não foi possível enviar o código.');
     } finally {
       setBusy(false);
     }
+  };
+
+  const onRequestOtp = async (ev: React.FormEvent) => {
+    ev.preventDefault();
+    await sendOtp(true);
+  };
+
+  const backToPhoneStep = () => {
+    setStep(1);
+    setCode('');
+    setNewPassword('');
+    setConfirmPassword('');
+    resetMessages();
   };
 
   const onSubmitTokenLogin = async (ev: React.FormEvent) => {
@@ -331,16 +344,31 @@ export function LoginPage() {
                   {busy ? 'Validando…' : 'Entrar'}
                 </button>
 
+                <div className="login-links" style={{ marginTop: 8 }}>
+                  <button
+                    type="button"
+                    className="login-link"
+                    disabled={busy || loading}
+                    onClick={() => void sendOtp(false)}
+                  >
+                    Reenviar código
+                  </button>
+                  <button
+                    type="button"
+                    className="login-link"
+                    disabled={busy || loading}
+                    onClick={backToPhoneStep}
+                  >
+                    Voltar
+                  </button>
+                </div>
                 <button
                   type="button"
                   className="login-back-link"
-                  onClick={() => {
-                    setStep(1);
-                    setCode('');
-                    resetMessages();
-                  }}
+                  disabled={busy || loading}
+                  onClick={() => switchMode(MODES.CREDENTIALS)}
                 >
-                  Reenviar código
+                  Voltar ao login
                 </button>
               </form>
             )
@@ -435,18 +463,31 @@ export function LoginPage() {
                   {busy ? 'Salvando…' : 'Redefinir senha'}
                 </button>
 
+                <div className="login-links" style={{ marginTop: 8 }}>
+                  <button
+                    type="button"
+                    className="login-link"
+                    disabled={busy || loading}
+                    onClick={() => void sendOtp(false)}
+                  >
+                    Reenviar código
+                  </button>
+                  <button
+                    type="button"
+                    className="login-link"
+                    disabled={busy || loading}
+                    onClick={backToPhoneStep}
+                  >
+                    Voltar
+                  </button>
+                </div>
                 <button
                   type="button"
                   className="login-back-link"
-                  onClick={() => {
-                    setStep(1);
-                    setCode('');
-                    setNewPassword('');
-                    setConfirmPassword('');
-                    resetMessages();
-                  }}
+                  disabled={busy || loading}
+                  onClick={() => switchMode(MODES.CREDENTIALS)}
                 >
-                  Reenviar código
+                  Voltar ao login
                 </button>
               </form>
             )
