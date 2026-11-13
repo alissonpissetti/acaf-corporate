@@ -221,7 +221,17 @@ export function LoginPage() {
           ) : null}
 
           {mode === MODES.CREDENTIALS ? (
-            <form className="login-form" onSubmit={(ev) => void onSubmitCredentials(ev)}>
+            <form className="login-form" onSubmit={(ev) => void onSubmitCredentials(ev)} autoComplete="on">
+              {formError ? (
+                <p className="login-form-error" role="alert">
+                  {formError}
+                </p>
+              ) : null}
+              {formInfo ? (
+                <p className="login-form-info" role="status">
+                  {formInfo}
+                </p>
+              ) : null}
               <div className="field">
                 <label htmlFor="login-user">E-mail ou CPF</label>
                 <input
@@ -264,9 +274,6 @@ export function LoginPage() {
                 </button>
               </div>
 
-              {formError ? <p className="login-form-error">{formError}</p> : null}
-              {formInfo ? <p className="login-form-info">{formInfo}</p> : null}
-
               <button
                 type="submit"
                 className="btn btn-primary login-submit"
@@ -280,6 +287,16 @@ export function LoginPage() {
           {mode === MODES.TOKEN ? (
             step === 1 ? (
               <form className="login-form" onSubmit={(ev) => void onRequestOtp(ev)}>
+                {formError ? (
+                  <p className="login-form-error" role="alert">
+                    {formError}
+                  </p>
+                ) : null}
+                {formInfo ? (
+                  <p className="login-form-info" role="status">
+                    {formInfo}
+                  </p>
+                ) : null}
                 <div className="field">
                   <label htmlFor="login-phone">Celular</label>
                   <input
@@ -294,9 +311,6 @@ export function LoginPage() {
                     required
                   />
                 </div>
-
-                {formError ? <p className="login-form-error">{formError}</p> : null}
-                {formInfo ? <p className="login-form-info">{formInfo}</p> : null}
 
                 <button
                   type="submit"
@@ -316,6 +330,16 @@ export function LoginPage() {
               </form>
             ) : (
               <form className="login-form" onSubmit={(ev) => void onSubmitTokenLogin(ev)}>
+                {formError ? (
+                  <p className="login-form-error" role="alert">
+                    {formError}
+                  </p>
+                ) : null}
+                {formInfo ? (
+                  <p className="login-form-info" role="status">
+                    {formInfo}
+                  </p>
+                ) : null}
                 <div className="field">
                   <label htmlFor="login-otp">Código no celular</label>
                   <input
@@ -332,9 +356,6 @@ export function LoginPage() {
                     required
                   />
                 </div>
-
-                {formError ? <p className="login-form-error">{formError}</p> : null}
-                {formInfo ? <p className="login-form-info">{formInfo}</p> : null}
 
                 <button
                   type="submit"
@@ -377,6 +398,16 @@ export function LoginPage() {
           {mode === MODES.FORGOT ? (
             step === 1 ? (
               <form className="login-form" onSubmit={(ev) => void onRequestOtp(ev)}>
+                {formError ? (
+                  <p className="login-form-error" role="alert">
+                    {formError}
+                  </p>
+                ) : null}
+                {formInfo ? (
+                  <p className="login-form-info" role="status">
+                    {formInfo}
+                  </p>
+                ) : null}
                 <div className="field">
                   <label htmlFor="forgot-phone">Celular</label>
                   <input
@@ -391,9 +422,6 @@ export function LoginPage() {
                     required
                   />
                 </div>
-
-                {formError ? <p className="login-form-error">{formError}</p> : null}
-                {formInfo ? <p className="login-form-info">{formInfo}</p> : null}
 
                 <button
                   type="submit"
@@ -413,6 +441,16 @@ export function LoginPage() {
               </form>
             ) : (
               <form className="login-form" onSubmit={(ev) => void onSubmitResetPassword(ev)}>
+                {formError ? (
+                  <p className="login-form-error" role="alert">
+                    {formError}
+                  </p>
+                ) : null}
+                {formInfo ? (
+                  <p className="login-form-info" role="status">
+                    {formInfo}
+                  </p>
+                ) : null}
                 <div className="field">
                   <label htmlFor="forgot-otp">Código no celular</label>
                   <input
@@ -451,9 +489,6 @@ export function LoginPage() {
                     required
                   />
                 </div>
-
-                {formError ? <p className="login-form-error">{formError}</p> : null}
-                {formInfo ? <p className="login-form-info">{formInfo}</p> : null}
 
                 <button
                   type="submit"
