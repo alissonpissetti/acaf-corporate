@@ -13,6 +13,7 @@ import {
   resolveWebOnboardingUrl,
   listEmployees,
   patchEmployee,
+  patchEmployeeProfile,
   removeEmployee,
   sendEmployeeInviteEmail,
   sendEmployeeInviteSms,
@@ -28,14 +29,17 @@ import {
   parseEmployeesImportText,
   type ParsedEmployeeRow,
 } from '../utils/employeeBulkImport';
-import { formatCpfInput, formatPhoneInput } from '../utils/personInput';
+import { formatCpfInput, formatPhoneInput, normalizeCpf } from '../utils/personInput';
+import { isValidCpf } from '../utils/signupValidation';
 import type { EmployeesBulkImportResult } from '../api/client';
 import { EnrollmentCodeBar } from '../components/EnrollmentCodeBar';
 import { EmployeeRowActions } from '../components/EmployeeRowActions';
 import {
   canCancelInvite,
+  canEditEmployeeDetails,
   canSendInvite,
   cancelInviteLabel,
+  employeeProfileMatchesPatch,
 } from '../utils/employeeActions';
 import './DashboardPage.css';
 import '../components/EmployeeModal.css';
@@ -78,6 +82,14 @@ export function EmployeesPage() {
   const [profileLoading, setProfileLoading] = useState(false);
   const [profileError, setProfileError] = useState<string | null>(null);
   const [profileData, setProfileData] = useState<EmployeeUsageResponse | null>(null);
+  const profileStartInEditRef = useRef(false);
+  const [profileEditMode, setProfileEditMode] = useState(false);
+  const [profileEditBusy, setProfileEditBusy] = useState(false);
+  const [editName, setEditName] = useState('');
+  const [editEmail, setEditEmail] = useState('');
+  const [editCpf, setEditCpf] = useState('');
+  const [editMobilePhone, setEditMobilePhone] = useState('');
+  const [resendInviteAfterEmailChange, setResendInviteAfterEmailChange] = useState(true);
   const [removeTarget, setRemoveTarget] = useState<EmployeeDto | null>(null);
   const [removeBusy, setRemoveBusy] = useState(false);
 
@@ -158,7 +170,11 @@ export function EmployeesPage() {
         setRemoveTarget(null);
         return;
       }
-      if (profileOpen && !profileLoading) {
+      if (profileOpen && !profileLoading && !profileEditBusy) {
+        if (profileEditMode) {
+          setProfileEditMode(false);
+          return;
+        }
         setProfileOpen(false);
         return;
       }
@@ -175,7 +191,26 @@ export function EmployeesPage() {
       document.body.style.overflow = '';
       window.removeEventListener('keydown', onKeyDown);
     };
-  }, [modalOpen, bulkModalOpen, profileOpen, busy, bulkBusy, profileLoading, removeTarget, removeBusy]);
+  }, [
+    modalOpen,
+    bulkModalOpen,
+    profileOpen,
+    busy,
+    bulkBusy,
+    profileLoading,
+    profileEditMode,
+    profileEditBusy,
+    removeTarget,
+    removeBusy,
+  ]);
+
+  const resetProfileEditForm = useCallback((emp: EmployeeDto) => {
+    setEditName(emp.name);
+    setEditEmail(emp.email);
+    setEditCpf(emp.cpf ?? '');
+    setEditMobilePhone(emp.mobilePhone ?? '');
+    setResendInviteAfterEmailChange(true);
+  }, []);
 
   const downloadBulkTemplate = () => {
     const csv = '\uFEFF' + employeesImportCsvTemplate();
@@ -246,7 +281,9 @@ export function EmployeesPage() {
     }
   };
 
-  const openProfile = async (emp: EmployeeDto) => {
+  const openProfile = async (emp: EmployeeDto, startInEdit = false) => {
+    profileStartInEditRef.current = startInEdit;
+    setProfileEditMode(false);
     setProfileOpen(true);
     setProfileLoading(true);
     setProfileError(null);
@@ -254,18 +291,112 @@ export function EmployeesPage() {
     try {
       const data = await getEmployeeUsage(emp.id);
       setProfileData(data);
+      if (profileStartInEditRef.current && canEditEmployeeDetails(data.employee)) {
+        resetProfileEditForm(data.employee);
+        setProfileEditMode(true);
+      }
+      profileStartInEditRef.current = false;
     } catch (e) {
       setProfileError(e instanceof Error ? e.message : 'Erro ao carregar uso.');
+      profileStartInEditRef.current = false;
     } finally {
       setProfileLoading(false);
     }
   };
 
   const closeProfile = () => {
-    if (profileLoading) return;
+    if (profileLoading || profileEditBusy) return;
     setProfileOpen(false);
     setProfileData(null);
     setProfileError(null);
+    setProfileEditMode(false);
+  };
+
+  const beginProfileEdit = () => {
+    if (!profileData || !canEditEmployeeDetails(profileData.employee)) return;
+    resetProfileEditForm(profileData.employee);
+    setProfileEditMode(true);
+  };
+
+  const cancelProfileEdit = () => {
+    if (profileEditBusy) return;
+    setProfileEditMode(false);
+  };
+
+  const onSaveProfileEdit = async (ev: React.FormEvent) => {
+    ev.preventDefault();
+    if (!profileData || profileEditBusy) return;
+
+    const trimmedName = editName.trim();
+    const trimmedEmail = editEmail.trim().toLowerCase();
+    if (!trimmedName || !trimmedEmail) {
+      flash.error('Informe nome e e-mail.');
+      return;
+    }
+    if (!trimmedEmail.includes('@')) {
+      flash.error('Informe um e-mail válido.');
+      return;
+    }
+
+    const cpfDigits = editCpf.trim() ? normalizeCpf(editCpf) : null;
+    if (cpfDigits && !isValidCpf(cpfDigits)) {
+      flash.error('CPF inválido. Confira os 11 dígitos.');
+      return;
+    }
+
+    const phoneDigits = editMobilePhone.replace(/\D/g, '');
+    if (phoneDigits.length < 10) {
+      flash.error('Informe um celular válido com DDD.');
+      return;
+    }
+
+    const prior = profileData.employee;
+    const emailChanged = trimmedEmail !== prior.email.trim().toLowerCase();
+
+    const patchSent = {
+      name: trimmedName,
+      email: trimmedEmail,
+      cpf: cpfDigits,
+      mobilePhoneDigits: phoneDigits,
+    };
+
+    setProfileEditBusy(true);
+    try {
+      const updated = await patchEmployeeProfile(prior.id, {
+        name: trimmedName,
+        email: trimmedEmail,
+        cpf: cpfDigits,
+        mobilePhone: editMobilePhone,
+      });
+
+      if (!employeeProfileMatchesPatch(updated, patchSent)) {
+        throw new Error(
+          'A API não aplicou as alterações cadastrais. Reinicie a acaf-api com npm run start:dev (código-fonte atual) ou rode npm run build na pasta acaf-api.',
+        );
+      }
+
+      setProfileData((prev) => (prev ? { ...prev, employee: updated } : prev));
+
+      if (emailChanged && resendInviteAfterEmailChange && canSendInvite(updated)) {
+        try {
+          await sendEmployeeInviteEmail(updated.id);
+          flash.success('Dados atualizados e convite reenviado para o novo e-mail.');
+        } catch (e) {
+          flash.success('Dados atualizados.');
+          flash.error(e instanceof Error ? e.message : 'Não foi possível reenviar o convite.');
+        }
+      } else {
+        flash.success('Dados do colaborador atualizados.');
+      }
+
+      setProfileEditMode(false);
+      await load();
+      await refreshProfileFromServer(prior.id);
+    } catch (e) {
+      flash.error(e instanceof Error ? e.message : 'Não foi possível salvar.');
+    } finally {
+      setProfileEditBusy(false);
+    }
   };
 
   /** Mantém o painel alinhado à lista após convite ou troca de status. */
@@ -676,6 +807,11 @@ export function EmployeesPage() {
                                 emp={emp}
                                 disabled={actionBusy || removeBusy}
                                 onProfile={() => void openProfile(emp)}
+                                onEditDetails={
+                                  canEditEmployeeDetails(emp)
+                                    ? () => void openProfile(emp, true)
+                                    : undefined
+                                }
                                 onCopyInviteLink={() => void onCopyInviteLink(emp)}
                                 onToggleStatus={() => void toggleStatus(emp)}
                                 onCancelOrRemove={() => askCancelInvite(emp)}
@@ -906,22 +1042,135 @@ export function EmployeesPage() {
               {profileError ? <p className="page-error">{profileError}</p> : null}
               {!profileLoading && profileData ? (
                 <>
-                  <div className="emp-profile-meta">
-                    <div>
-                      <strong>{profileData.employee.name}</strong>
+                  {canEditEmployeeDetails(profileData.employee) ? (
+                    <div className="emp-profile-edit">
+                      <div className="emp-profile-edit__head">
+                        <h3 className="emp-profile-section-title" style={{ margin: 0 }}>
+                          Dados cadastrais
+                        </h3>
+                        {!profileEditMode ? (
+                          <button
+                            type="button"
+                            className="btn btn-secondary btn-sm"
+                            onClick={() => beginProfileEdit()}
+                          >
+                            Editar dados
+                          </button>
+                        ) : null}
+                      </div>
+                      {profileEditMode ? (
+                        <form className="emp-profile-edit-form" onSubmit={(ev) => void onSaveProfileEdit(ev)}>
+                          <p className="muted emp-profile-edit-lead">
+                            Corrija erros de digitação antes da ativação no app (código da empresa + CPF).
+                          </p>
+                          <div className="employee-modal-grid">
+                            <div className="field field-span-2">
+                              <label htmlFor="profile-edit-name">Nome completo</label>
+                              <input
+                                id="profile-edit-name"
+                                value={editName}
+                                onChange={(ev) => setEditName(ev.target.value)}
+                                required
+                                disabled={profileEditBusy}
+                              />
+                            </div>
+                            <div className="field field-span-2">
+                              <label htmlFor="profile-edit-email">E-mail</label>
+                              <input
+                                id="profile-edit-email"
+                                type="email"
+                                value={editEmail}
+                                onChange={(ev) => setEditEmail(ev.target.value)}
+                                required
+                                disabled={profileEditBusy}
+                              />
+                            </div>
+                            <div className="field">
+                              <label htmlFor="profile-edit-phone">Celular</label>
+                              <input
+                                id="profile-edit-phone"
+                                value={editMobilePhone}
+                                onChange={(ev) => setEditMobilePhone(formatPhoneInput(ev.target.value))}
+                                inputMode="tel"
+                                required
+                                disabled={profileEditBusy}
+                              />
+                            </div>
+                            <div className="field">
+                              <label htmlFor="profile-edit-cpf">CPF</label>
+                              <input
+                                id="profile-edit-cpf"
+                                value={editCpf}
+                                onChange={(ev) => setEditCpf(formatCpfInput(ev.target.value))}
+                                inputMode="numeric"
+                                placeholder="000.000.000-00"
+                                disabled={profileEditBusy}
+                              />
+                            </div>
+                          </div>
+                          {editEmail.trim().toLowerCase() !==
+                          profileData.employee.email.trim().toLowerCase() ? (
+                            <label className="employee-modal-invite-option emp-profile-edit-resend">
+                              <input
+                                type="checkbox"
+                                checked={resendInviteAfterEmailChange}
+                                onChange={(ev) => setResendInviteAfterEmailChange(ev.target.checked)}
+                                disabled={profileEditBusy}
+                              />
+                              <span>
+                                Reenviar convite por e-mail após salvar
+                                <small>O novo endereço receberá o código de adesão</small>
+                              </span>
+                            </label>
+                          ) : null}
+                          <div className="emp-profile-edit-actions">
+                            <button
+                              type="button"
+                              className="btn btn-secondary btn-sm"
+                              disabled={profileEditBusy}
+                              onClick={() => cancelProfileEdit()}
+                            >
+                              Cancelar
+                            </button>
+                            <button type="submit" className="btn btn-primary btn-sm" disabled={profileEditBusy}>
+                              {profileEditBusy ? 'Salvando…' : 'Salvar alterações'}
+                            </button>
+                          </div>
+                        </form>
+                      ) : (
+                        <div className="emp-profile-meta emp-profile-meta--compact">
+                          <div>
+                            <strong>{profileData.employee.name}</strong>
+                          </div>
+                          <div>
+                            {profileData.employee.email}
+                            {profileData.employee.cpf ? ` · CPF ${profileData.employee.cpf}` : ''}
+                            {profileData.employee.mobilePhone ? ` · ${profileData.employee.mobilePhone}` : ''}
+                          </div>
+                          <div>
+                            <strong>{employeeStatusLabel(profileData.employee.status)}</strong>
+                          </div>
+                        </div>
+                      )}
                     </div>
-                    <div>
-                      {profileData.employee.email}
-                      {profileData.employee.cpf ? ` · CPF ${profileData.employee.cpf}` : ''}
-                      {profileData.employee.mobilePhone ? ` · ${profileData.employee.mobilePhone}` : ''}
+                  ) : (
+                    <div className="emp-profile-meta">
+                      <div>
+                        <strong>{profileData.employee.name}</strong>
+                      </div>
+                      <div>
+                        {profileData.employee.email}
+                        {profileData.employee.cpf ? ` · CPF ${profileData.employee.cpf}` : ''}
+                        {profileData.employee.mobilePhone ? ` · ${profileData.employee.mobilePhone}` : ''}
+                      </div>
+                      <div>
+                        <strong>{employeeStatusLabel(profileData.employee.status)}</strong>
+                      </div>
                     </div>
-                    <div>
-                      <strong>{employeeStatusLabel(profileData.employee.status)}</strong>
-                    </div>
-                    {profileData.employee.billing ? (
-                      <p className="emp-profile-billing">{employeeBillingShortLabel(profileData.employee)}</p>
-                    ) : null}
-                  </div>
+                  )}
+                  {profileData.employee.billing ? (
+                    <p className="emp-profile-billing">{employeeBillingShortLabel(profileData.employee)}</p>
+                  ) : null}
                   {canSendInvite(profileData.employee) ? (
                     <div className="emp-profile-invite">
                       <h3 className="emp-profile-section-title">Código de adesão</h3>

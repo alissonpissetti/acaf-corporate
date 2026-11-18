@@ -1,7 +1,12 @@
 import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import type { EmployeeDto } from '../api/client';
-import { canCancelInvite, canSendInvite, cancelInviteLabel } from '../utils/employeeActions';
+import {
+  canCancelInvite,
+  canEditEmployeeDetails,
+  canSendInvite,
+  cancelInviteLabel,
+} from '../utils/employeeActions';
 
 const MENU_MIN_WIDTH_PX = 216;
 const MENU_OFFSET_PX = 6;
@@ -13,6 +18,7 @@ type EmployeeRowActionsProps = {
   onCopyInviteLink: () => void;
   onToggleStatus: () => void;
   onCancelOrRemove: () => void;
+  onEditDetails?: () => void;
 };
 
 export function EmployeeRowActions({
@@ -22,6 +28,7 @@ export function EmployeeRowActions({
   onCopyInviteLink,
   onToggleStatus,
   onCancelOrRemove,
+  onEditDetails,
 }: EmployeeRowActionsProps) {
   const [open, setOpen] = useState(false);
   const [menuPosition, setMenuPosition] = useState<{ top: number; left: number } | null>(null);
@@ -79,9 +86,10 @@ export function EmployeeRowActions({
   }, [open]);
 
   const showCopyLink = canSendInvite(emp);
+  const showEdit = canEditEmployeeDetails(emp);
   const showToggle = emp.status === 'active' || emp.status === 'inactive';
   const showCancel = canCancelInvite(emp);
-  const hasMenu = showCopyLink || showToggle || showCancel;
+  const hasMenu = showCopyLink || showEdit || showToggle || showCancel;
 
   const closeAnd = (fn: () => void) => () => {
     setOpen(false);
@@ -132,6 +140,16 @@ export function EmployeeRowActions({
                     minWidth: MENU_MIN_WIDTH_PX,
                   }}
                 >
+                  {showEdit && onEditDetails ? (
+                    <button
+                      type="button"
+                      role="menuitem"
+                      className="employee-row-actions__item"
+                      onClick={closeAnd(onEditDetails)}
+                    >
+                      Editar dados
+                    </button>
+                  ) : null}
                   {showCopyLink ? (
                     <button
                       type="button"

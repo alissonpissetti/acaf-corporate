@@ -236,6 +236,20 @@ export function patchEmployee(id: string, status: 'active' | 'inactive'): Promis
   });
 }
 
+export type EmployeeProfilePatch = {
+  name?: string;
+  email?: string;
+  cpf?: string | null;
+  mobilePhone?: string;
+};
+
+export function patchEmployeeProfile(id: string, body: EmployeeProfilePatch): Promise<EmployeeDto> {
+  return corporateFetch(`/api/corporate/employees/${encodeURIComponent(id)}`, {
+    method: 'PATCH',
+    body: JSON.stringify(body),
+  });
+}
+
 export function removeEmployee(id: string): Promise<{ ok: true }> {
   return corporateFetch(`/api/corporate/employees/${encodeURIComponent(id)}`, {
     method: 'DELETE',
